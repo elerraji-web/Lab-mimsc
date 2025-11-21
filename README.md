@@ -15,7 +15,7 @@ Un site web dynamique pour le laboratoire MIMSC (Modélisation, Intelligence et 
 ### 📊 **Sections Dynamiques**
 
 #### 1. **Équipe**
-- **Enseignants-Chercheurs** : Membres permanents du laboratoire
+- **Enseignants-Chercheurs** : Membres permanents du laboratoire chargés depuis MongoDB
 - **Doctorants** : Étudiants en thèse avec superviseurs et domaines de recherche
 - **Étudiants Master** : Étudiants en master avec spécialisations
 
@@ -112,9 +112,9 @@ src/
 - Types et statuts
 
 #### **Research**
-- Axes de recherche et domaines d'expertise
+- Axes de recherche et domaines d'expertise (affichage statique sur le site)
 - Responsables scientifiques
-- Tags pour l'affichage dynamique sur le site
+- Tags pour contextualiser les axes
 
 ## 🚀 **Installation et Déploiement**
 
@@ -154,7 +154,7 @@ docker run -d --name mimsc-mongo -p 27017:27017 mongo:7
 ```bash
 MONGODB_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/mimsc-lab?retryWrites=true&w=majority
 ```
-   - Vérifier la connexion en lançant `npm run dev` puis en visitant `/api/users` ou `/api/research`.
+   - Vérifier la connexion en lançant `npm run dev` puis en visitant `/api/users` ou `/api/students`.
 
 5. **Démarrer le développement**
 ```bash
@@ -169,7 +169,7 @@ Pour ajouter des données exemples :
 # Utiliser curl ou un client API
 curl -X POST http://localhost:3000/api/seed
 ```
-La route de seed crée des utilisateurs, étudiants, publications, événements et axes de recherche pour alimenter les sections dynamiques.
+La route de seed crée des utilisateurs (incluant les enseignants-chercheurs), étudiants, publications, événements et axes de recherche pour alimenter les sections dynamiques.
 
 ### **Déploiement**
 
@@ -194,9 +194,13 @@ npm start
 - `GET /api/publications?limit=10` - Limiter les résultats
 - `POST /api/publications` - Créer une nouvelle publication
 
+### **Équipe**
+- `GET /api/users?type=FACULTY` - Récupérer les enseignants-chercheurs
+- `GET /api/students?type=PHD` - Récupérer les doctorants
+- `GET /api/students?type=MASTER` - Récupérer les étudiants Master
+
 ### **Recherche**
-- `GET /api/research` - Récupérer les axes de recherche
-- `GET /api/research?limit=6` - Limiter l'affichage sur la page d'accueil
+- `GET /api/research` - Récupérer les axes de recherche (utilisés pour l'administration ou d'autres vues)
 - `POST /api/research` - Créer un nouvel axe
 
 ### **Événements**
