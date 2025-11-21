@@ -1,0 +1,290 @@
+{
+  "personalInfo": {
+    "firstName": "Ahmed",
+    "lastName": "Mohammed",
+    "title": "Professeur",
+    "position": "Directeur du Laboratoire MIMSC",
+    "email": "ahmed.mohammed@este.uca.ma",
+    "phone": "+212 524 78 90 12",
+    "office": "Bâtiment A, Bureau 301",
+    "avatar": "",
+    "bio": "Professeur d'informatique spécialisé en intelligence artificielle et apprentissage automatique. Directeur du laboratoire MIMSC avec plus de 15 ans d'expérience dans la recherche académique.",
+    "interests": [
+      "Intelligence Artificielle",
+      "Machine Learning",
+      "Deep Learning",
+      "Traitement d'images",
+      "Data Science"
+    ],
+    "links": {
+      "googleScholar": "https://scholar.google.com/citations?user=example",
+      "researchGate": "https://www.researchgate.net/profile/example",
+      "linkedin": "https://linkedin.com/in/example",
+      "orcid": "https://orcid.org/0000-0000-0000-0000"
+    }
+  },
+  "scientificActivity": {
+    "publications": [
+      {
+        "id": "pub1",
+        "title": "Deep Learning Approaches for Medical Image Analysis: A Comprehensive Survey",
+        "authors": ["Ahmed Mohammed", "Fatima Zahra", "Karim Omar"],
+        "journal": "IEEE Transactions on Medical Imaging",
+        "year": 2024,
+        "volume": "43",
+        "issue": "2",
+        "pages": "456-478",
+        "doi": "10.1109/TMI.2023.1234567",
+        "type": "Journal Article",
+        "abstract": "This paper presents a comprehensive survey of deep learning approaches for medical image analysis..."
+      },
+      {
+        "id": "pub2",
+        "title": "Real-time Object Detection in Smart Cities using IoT and Edge Computing",
+        "authors": ["Karim Omar", "Ahmed Mohammed", "Youssef Said"],
+        "journal": "Journal of Network and Computer Applications",
+        "year": 2023,
+        "volume": "205",
+        "pages": "103456",
+        "doi": "10.1016/j.jnca.2023.103456",
+        "type": "Journal Article",
+        "abstract": "This paper proposes a novel approach for real-time object detection in smart cities..."
+      },
+      {
+        "id": "pub3",
+        "title": "Mathematical Modeling of Epidemic Spread using Machine Learning Techniques",
+        "authors": ["Ahmed Mohammed", "Karim Omar", "Mohamed Ben"],
+        "journal": "Mathematical Biosciences and Engineering",
+        "year": 2022,
+        "volume": "19",
+        "issue": "8",
+        "pages": "8234-8256",
+        "doi": "10.3934/mbe.2022378",
+        "type": "Journal Article",
+        "abstract": "This study presents a mathematical model for epidemic spread prediction using machine learning..."
+      }
+    ],
+    "projects": [
+      {
+        "id": "proj1",
+        "title": "AI-MED: Intelligence Artificielle pour le Diagnostic Médical",
+        "description": "Développement d'algorithmes d'IA pour l'aide au diagnostic médical à partir d'images médicales",
+        "funding": "CNRST - 1,200,000 MAD",
+        "duration": "2023-2026",
+        "role": "Coordinateur",
+        "status": "Actif",
+        "partners": ["CHU Mohammed VI", "Faculté de Médecine"]
+      },
+      {
+        "id": "proj2",
+        "title": "SMART-CITY: Systèmes Intelligents pour les Villes Durables",
+        "description": "Conception et implémentation de systèmes IoT pour la gestion intelligente des villes",
+        "funding": "UE Horizon Europe - 2,500,000 MAD",
+        "duration": "2022-2025",
+        "role": "Co-coordinateur",
+        "status": "Actif",
+        "partners": ["Université de Lyon", "Mairie d'Essaouira"]
+      },
+      {
+        "id": "proj3",
+        "title": "DATA-MINING: Extraction de Connaissances à partir des Big Data",
+        "description": "Développement de techniques avancées de data mining pour l'analyse de grandes masses de données",
+        "funding": "UCA - 800,000 MAD",
+        "duration": "2021-2024",
+        "role": "Coordinateur",
+        "status": "Terminé",
+        "partners": ["IBM Morocco", "Innovation Lab"]
+      }
+    ],
+    "supervisions": [
+      {
+        "id": "sup1",
+        "studentName": "Youssef Said",
+        "thesisTitle": "Deep Learning pour l'analyse d'images médicales",
+        "type": "Thèse Doctorat",
+        "startDate": "2021",
+        "endDate": "2024",
+        "status": "En cours",
+        "coSupervisors": ["Dr. Fatima Zahra"]
+      },
+      {
+        "id": "sup2",
+        "studentName": "Leila Ali",
+        "thesisTitle": "Traitement du langage naturel pour l'arabe",
+        "type": "Thèse Doctorat",
+        "startDate": "2022",
+        "endDate": "2025",
+        "status": "En cours",
+        "coSupervisors": ["Pr. Karim Omar"]
+      },
+      {
+        "id": "sup3",
+        "studentName": "Adam Kamal",
+        "thesisTitle": "Sécurité des systèmes IoT",
+        "type": "Master Recherche",
+        "startDate": "2023",
+        "endDate": "2024",
+        "status": "Terminé",
+        "coSupervisors": []
+      }
+    ],
+    "conferences": [
+      {
+        "id": "conf1",
+        "title": "Keynote: The Future of AI in Healthcare",
+        "conference": "International Conference on Medical Imaging",
+        "location": "Paris, France",
+        "date": "2024-03-15",
+        "type": "Keynote Speaker"
+      },
+      {
+        "id": "conf2",
+        "title": "Deep Learning for Smart Cities: Challenges and Opportunities",
+        "conference": "IEEE International Conference on Smart Cities",
+        "location": "Barcelone, Espagne",
+        "date": "2023-11-20",
+        "type": "Invited Speaker"
+      },
+      {
+        "id": "conf3",
+        "title": "Machine Learning Applications in Epidemic Modeling",
+        "conference": "International Conference on Computational Science",
+        "location": "Amsterdam, Pays-Bas",
+        "date": "2023-07-10",
+        "type": "Presenter"
+      }
+    ]
+  },
+  "pedagogicalActivity": {
+    "courses": [
+      {
+        "id": "course1",
+        "title": "Intelligence Artificielle",
+        "code": "IA301",
+        "level": "Master 1",
+        "program": "Master Informatique",
+        "semester": "S1",
+        "hours": 45,
+        "description": "Introduction aux concepts fondamentaux de l'intelligence artificielle et à ses applications",
+        "objectives": [
+          "Comprendre les principes de base de l'IA",
+          "Maîtriser les algorithmes de recherche et d'optimisation",
+          "Appliquer les techniques d'IA à des problèmes réels"
+        ]
+      },
+      {
+        "id": "course2",
+        "title": "Machine Learning",
+        "code": "ML302",
+        "level": "Master 2",
+        "program": "Master Data Science",
+        "semester": "S1",
+        "hours": 60,
+        "description": "Techniques avancées d'apprentissage automatique et leurs applications",
+        "objectives": [
+          "Maîtriser les algorithmes de machine learning",
+          "Comprendre le deep learning et ses applications",
+          "Implémenter des solutions ML complètes"
+        ]
+      },
+      {
+        "id": "course3",
+        "title": "Traitement d'Images",
+        "code": "TI201",
+        "level": "Licence 3",
+        "program": "Licence Informatique",
+        "semester": "S2",
+        "hours": 30,
+        "description": "Introduction au traitement numérique des images et à ses applications",
+        "objectives": [
+          "Comprendre les bases du traitement d'images",
+          "Maîtriser les techniques de filtrage et segmentation",
+          "Appliquer les méthodes de traitement d'images"
+        ]
+      }
+    ],
+    "tutorials": [
+      {
+        "id": "tut1",
+        "title": "Tutorial: Deep Learning with TensorFlow",
+        "type": "Workshop",
+        "audience": "Étudiants Master/Doctorat",
+        "duration": "3 jours",
+        "date": "2024-02-10",
+        "participants": 25,
+        "description": "Formation pratique sur l'utilisation de TensorFlow pour le deep learning"
+      },
+      {
+        "id": "tut2",
+        "title": "Introduction à Python pour la Data Science",
+        "type": "Cours d'été",
+        "audience": "Étudiants Licence/Master",
+        "duration": "2 semaines",
+        "date": "2023-07-01",
+        "participants": 40,
+        "description": "Formation intensive sur Python et ses bibliothèques pour la data science"
+      }
+    ],
+    "responsibilities": [
+      {
+        "id": "resp1",
+        "title": "Coordinateur Master Informatique",
+        "period": "2020-Présent",
+        "description": "Coordination du programme Master Informatique, gestion des inscriptions, suivi des étudiants"
+      },
+      {
+        "id": "resp2",
+        "title": "Membre du Conseil Pédagogique",
+        "period": "2019-Présent",
+        "description": "Participation aux décisions pédagogiques de l'établissement"
+      },
+      {
+        "id": "resp3",
+        "title": "Responsable Laboratoire Informatique",
+        "period": "2018-2022",
+        "description": "Gestion et maintenance des équipements du laboratoire informatique"
+      }
+    ],
+    "innovations": [
+      {
+        "id": "inn1",
+        "title": "Plateforme d'apprentissage en ligne IA-Learn",
+        "description": "Développement d'une plateforme MOOC pour l'apprentissage de l'intelligence artificielle",
+        "year": 2023,
+        "impact": "Plus de 500 étudiants inscrits",
+        "recognition": "Prix d'innovation pédagogique UCA 2023"
+      },
+      {
+        "id": "inn2",
+        "title": "Projets pratiques en collaboration avec l'industrie",
+        "description": "Mise en place de projets réels avec des entreprises partenaires pour les étudiants",
+        "year": 2022,
+        "impact": "15 projets réalisés, 30 étudiants impliqués",
+        "recognition": "Label d'excellence industrielle"
+      }
+    ]
+  },
+  "honors": [
+    {
+      "id": "hon1",
+      "title": "Prix d'Excellence en Recherche",
+      "organization": "Université Cadi Ayyad",
+      "year": 2023,
+      "description": "Reconnaissance pour contributions exceptionnelles à la recherche en IA"
+    },
+    {
+      "id": "hon2",
+      "title": "Meilleur Publication de l'Année",
+      "organization": "Ministère de l'Enseignement Supérieur",
+      "year": 2022,
+      "description": "Prix pour la publication sur la modélisation mathématique des épidémies"
+    },
+    {
+      "id": "hon3",
+      "title": "Membre Senior IEEE",
+      "organization": "IEEE",
+      "year": 2021,
+      "description": "Reconnaissance pour contributions significatives au domaine de l'ingénierie"
+    }
+  ]
+}

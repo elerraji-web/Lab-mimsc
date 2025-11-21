@@ -1,0 +1,206 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Lab Team Members
+enum MemberType {
+  FACULTY
+  PHD_STUDENT
+  MASTER_STUDENT
+  POSTDOC
+  RESEARCHER
+}
+
+enum MemberStatus {
+  ACTIVE
+  INACTIVE
+  ON_LEAVE
+}
+
+model TeamMember {
+  id          String      @id @default(cuid())
+  firstName   String
+  lastName    String
+  email       String      @unique
+  position    String
+  type        MemberType
+  status      MemberStatus @default(ACTIVE)
+  bio         String?
+  avatar      String?
+  expertise   String?    // JSON array of expertise areas
+  joinDate    DateTime    @default(now())
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relations
+  publications Publication[]
+  projects     ResearchProjectMember[]
+  
+  @@map("team_members")
+}
+
+// Research Areas
+model ResearchArea {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  color       String?  // For UI display
+  
+  // Relations
+  projects ResearchProject[]
+  
+  @@map("research_areas")
+}
+
+// Research Projects
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  COMPLETED
+  ON_HOLD
+  CANCELLED
+}
+
+model ResearchProject {
+  id          String        @id @default(cuid())
+  title       String
+  description String
+  status      ProjectStatus @default(PLANNING)
+  startDate   DateTime
+  endDate     DateTime?
+  budget      Float?
+  funding     String?
+  externalUrl String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  areaId      String
+  area        ResearchArea  @relation(fields: [areaId], references: [id])
+  members     ResearchProjectMember[]
+  publications Publication[]
+  
+  @@map("research_projects")
+}
+
+// Project Members (many-to-many relationship)
+model ResearchProjectMember {
+  id        String   @id @default(cuid())
+  role      String   // e.g., "Principal Investigator", "Co-investigator", "Research Assistant"
+  joinDate  DateTime @default(now())
+  leaveDate DateTime?
+  
+  // Relations
+  projectId String
+  project   ResearchProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  memberId  String
+  member    TeamMember      @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  
+  @@unique([projectId, memberId])
+  @@map("research_project_members")
+}
+
+// Publications
+enum PublicationType {
+  JOURNAL_ARTICLE
+  CONFERENCE_PAPER
+  BOOK_CHAPTER
+  BOOK
+  THESIS
+  REPORT
+  PREPRINT
+}
+
+model Publication {
+  id          String         @id @default(cuid())
+  title       String
+  abstract    String?
+  type        PublicationType
+  journal     String?        // Journal name for articles
+  conference  String?        // Conference name for papers
+  volume      String?
+  issue       String?
+  pages       String?
+  publisher   String?
+  doi         String?        @unique
+  url         String?
+  publishedAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  // Relations
+  authorId    String?
+  author      TeamMember?    @relation(fields: [authorId], references: [id])
+  projectId   String?
+  project     ResearchProject? @relation(fields: [projectId], references: [id])
+  
+  @@map("publications")
+}
+
+// Contact Messages
+enum MessageStatus {
+  NEW
+  READ
+  REPLIED
+  ARCHIVED
+}
+
+model ContactMessage {
+  id        String        @id @default(cuid())
+  firstName String
+  lastName  String
+  email     String
+  subject   String
+  message   String
+  status    MessageStatus @default(NEW)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  
+  @@map("contact_messages")
+}
+
+// Lab Information (singleton table for lab settings)
+model LabInfo {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  address     String
+  phone       String?
+  email       String
+  website     String?
+  logo        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("lab_info")
+}
+
+// Legacy models (keeping for compatibility)
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  title     String
+  content   String?
+  published Boolean  @default(false)
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

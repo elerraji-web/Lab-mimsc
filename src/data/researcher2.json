@@ -1,0 +1,203 @@
+{
+  "personalInfo": {
+    "firstName": "Fatima",
+    "lastName": "Zahra",
+    "title": "Professeure",
+    "position": "Co-Directrice du Laboratoire MIMSC",
+    "email": "fatima.zahra@este.uca.ma",
+    "phone": "+212 524 78 90 13",
+    "office": "Bâtiment A, Bureau 302",
+    "avatar": "",
+    "bio": "Professeure d'informatique spécialisée en traitement du signal et analyse d'images. Co-directrice du laboratoire MIMSC avec expertise en vision par ordinateur et traitement multimédia.",
+    "interests": [
+      "Traitement du Signal",
+      "Vision par Ordinateur",
+      "Analyse d'Images",
+      "Multimédia",
+      "Réalité Virtuelle"
+    ],
+    "links": {
+      "googleScholar": "https://scholar.google.com/citations?user=fatima-example",
+      "researchGate": "https://www.researchgate.net/profile/fatima-example",
+      "linkedin": "https://linkedin.com/in/fatima-example",
+      "orcid": "https://orcid.org/0000-0000-0000-0001"
+    }
+  },
+  "scientificActivity": {
+    "publications": [
+      {
+        "id": "pub1",
+        "title": "Advanced Signal Processing for Medical Image Enhancement",
+        "authors": ["Fatima Zahra", "Ahmed Mohammed", "Sara Hassan"],
+        "journal": "IEEE Signal Processing Magazine",
+        "year": 2024,
+        "volume": "41",
+        "issue": "3",
+        "pages": "234-256",
+        "doi": "10.1109/MSP.2024.2345678",
+        "type": "Journal Article",
+        "abstract": "This paper presents novel signal processing techniques for medical image enhancement..."
+      },
+      {
+        "id": "pub2",
+        "title": "Computer Vision Applications in Cultural Heritage Preservation",
+        "authors": ["Fatima Zahra", "Leila Ali", "Mohamed Ben"],
+        "journal": "Journal of Cultural Heritage",
+        "year": 2023,
+        "volume": "56",
+        "pages": "78-90",
+        "doi": "10.1016/j.culher.2023.789012",
+        "type": "Journal Article",
+        "abstract": "This paper explores computer vision applications for preserving cultural heritage..."
+      }
+    ],
+    "projects": [
+      {
+        "id": "proj1",
+        "title": "SIGMA: Traitement du Signal pour Applications Médicales",
+        "description": "Développement d'algorithmes avancés de traitement du signal pour l'imagerie médicale",
+        "funding": "CNRS - 900,000 MAD",
+        "duration": "2023-2026",
+        "role": "Co-coordinateur",
+        "status": "Actif",
+        "partners": ["Hôpital Ibn Sina", "Faculté de Médecine"]
+      },
+      {
+        "id": "proj2",
+        "title": "VISION-VR: Vision par Ordinateur et Réalité Virtuelle",
+        "description": "Applications de la vision par ordinateur dans les environnements de réalité virtuelle",
+        "funding": "UCA - 600,000 MAD",
+        "duration": "2022-2025",
+        "role": "Coordinateur",
+        "status": "Actif",
+        "partners": ["École des Beaux-Arts", "Ministère de la Culture"]
+      }
+    ],
+    "supervisions": [
+      {
+        "id": "sup1",
+        "studentName": "Sara Hassan",
+        "thesisTitle": "Vision par ordinateur pour l'analyse d'images médicales",
+        "type": "Thèse Doctorat",
+        "startDate": "2022",
+        "endDate": "2025",
+        "status": "En cours",
+        "coSupervisors": ["Dr. Ahmed Mohammed"]
+      },
+      {
+        "id": "sup2",
+        "studentName": "Nadia Mahmoud",
+        "thesisTitle": "Traitement du signal pour les applications IoT",
+        "type": "Master Recherche",
+        "startDate": "2023",
+        "endDate": "2024",
+        "status": "En cours",
+        "coSupervisors": ["Dr. Karim Omar"]
+      }
+    ],
+    "conferences": [
+      {
+        "id": "conf1",
+        "title": "Invited Talk: Signal Processing in the Era of AI",
+        "conference": "International Conference on Signal Processing",
+        "location": "Londres, Royaume-Uni",
+        "date": "2024-05-20",
+        "type": "Invited Speaker"
+      },
+      {
+        "id": "conf2",
+        "title": "Computer Vision for Cultural Heritage Preservation",
+        "conference": "IEEE International Conference on Computer Vision",
+        "location": "Rome, Italie",
+        "date": "2023-10-15",
+        "type": "Presenter"
+      }
+    ]
+  },
+  "pedagogicalActivity": {
+    "courses": [
+      {
+        "id": "course1",
+        "title": "Traitement du Signal",
+        "code": "TS301",
+        "level": "Master 1",
+        "program": "Master Informatique",
+        "semester": "S1",
+        "hours": 45,
+        "description": "Introduction aux techniques de traitement du signal et leurs applications",
+        "objectives": [
+          "Comprendre les fondamentaux du traitement du signal",
+          "Maîtriser les techniques de filtrage et analyse",
+          "Appliquer le traitement du signal à des problèmes réels"
+        ]
+      },
+      {
+        "id": "course2",
+        "title": "Vision par Ordinateur",
+        "code": "VO302",
+        "level": "Master 2",
+        "program": "Master Informatique",
+        "semester": "S2",
+        "hours": 60,
+        "description": "Techniques avancées de vision par ordinateur et applications",
+        "objectives": [
+          "Maîtriser les algorithmes de vision par ordinateur",
+          "Comprendre le deep learning pour la vision",
+          "Implémenter des solutions CV complètes"
+        ]
+      }
+    ],
+    "tutorials": [
+      {
+        "id": "tut1",
+        "title": "Workshop: OpenCV pour la Vision par Ordinateur",
+        "type": "Workshop",
+        "audience": "Étudiants Master/Doctorat",
+        "duration": "2 jours",
+        "date": "2024-03-15",
+        "participants": 20,
+        "description": "Formation pratique sur l'utilisation d'OpenCV pour la vision par ordinateur"
+      }
+    ],
+    "responsibilities": [
+      {
+        "id": "resp1",
+        "title": "Responsable Pédagogique Master Informatique",
+        "period": "2021-Présent",
+        "description": "Gestion des programmes pédagogiques et suivi des étudiants"
+      },
+      {
+        "id": "resp2",
+        "title": "Membre du Comité Scientifique",
+        "period": "2020-Présent",
+        "description": "Participation aux décisions scientifiques de l'établissement"
+      }
+    ],
+    "innovations": [
+      {
+        "id": "inn1",
+        "title": "Plateforme d'apprentissage interactif CV-Learn",
+        "description": "Développement d'une plateforme interactive pour l'apprentissage de la vision par ordinateur",
+        "year": 2023,
+        "impact": "Plus de 300 étudiants utilisent la plateforme",
+        "recognition": "Prix d'innovation pédagogique ESTE 2023"
+      }
+    ]
+  },
+  "honors": [
+    {
+      "id": "hon1",
+      "title": "Prix d'Excellence en Traitement du Signal",
+      "organization": "IEEE Signal Processing Society",
+      "year": 2023,
+      "description": "Reconnaissance pour contributions exceptionnelles au traitement du signal"
+    },
+    {
+      "id": "hon2",
+      "title": "Meilleure Publication en Vision par Ordinateur",
+      "organization": "Association Marocaine de Vision par Ordinateur",
+      "year": 2022,
+      "description": "Prix pour les travaux sur la préservation du patrimoine culturel"
+    }
+  ]
+}
