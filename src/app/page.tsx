@@ -14,6 +14,7 @@ import { Mail, Phone, MapPin, Globe, Users, BookOpen, Microscope, Award } from '
 import DynamicTeamSection from '@/components/DynamicTeamSection';
 import DynamicPublications from '@/components/DynamicPublications';
 import DynamicEvents from '@/components/DynamicEvents';
+import DynamicResearch from '@/components/DynamicResearch';
 
 export default function Home() {
   const [activeSection, setActiveSection] = useState('home');
@@ -208,109 +209,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle>Intelligence Artificielle</CardTitle>
-                <CardDescription>Machine Learning & Deep Learning</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Développement d'algorithmes avancés pour l'apprentissage automatique et l'analyse de données complexes.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline">ML</Badge>
-                  <Badge variant="outline">DL</Badge>
-                  <Badge variant="outline">NLP</Badge>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle>Traitement du Multimédia</CardTitle>
-                <CardDescription>Image, Audio & Vidéo</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Analyse et traitement avancé du contenu multimédia pour diverses applications industrielles.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline">CV</Badge>
-                  <Badge variant="outline">Audio</Badge>
-                  <Badge variant="outline">VR</Badge>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle>Modélisation Mathématique</CardTitle>
-                <CardDescription>Simulation & Optimisation</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Modélisation mathématique de systèmes complexes et optimisation pour la prise de décision.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline">Math</Badge>
-                  <Badge variant="outline">Optimisation</Badge>
-                  <Badge variant="outline">Simulation</Badge>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle>Big Data Analytics</CardTitle>
-                <CardDescription>Data Mining & Visualisation</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Extraction de connaissances à partir de grandes masses de données et visualisation interactive.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline">Data Mining</Badge>
-                  <Badge variant="outline">Analytics</Badge>
-                  <Badge variant="outline">Viz</Badge>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle>IoT & Systèmes Intelligents</CardTitle>
-                <CardDescription>Capteurs & Automatisation</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Développement de systèmes intelligents connectés pour l'industrie et les smart cities.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline">IoT</Badge>
-                  <Badge variant="outline">Smart Systems</Badge>
-                  <Badge variant="outline">Sensors</Badge>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle>Sécurité Informatique</CardTitle>
-                <CardDescription>Cryptographie & Privacy</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Recherche en sécurité des systèmes d'information et protection des données personnelles.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline">Security</Badge>
-                  <Badge variant="outline">Crypto</Badge>
-                  <Badge variant="outline">Privacy</Badge>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <DynamicResearch />
         </div>
       </section>
 

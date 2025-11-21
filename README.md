@@ -59,6 +59,7 @@ src/
 │   ├── api/               # Endpoints API
 │   │   ├── students/      # Gestion des étudiants
 │   │   ├── publications/  # Gestion des publications
+│   │   ├── research/      # Axes de recherche
 │   │   ├── events/        # Gestion des événements
 │   │   ├── users/         # Gestion des utilisateurs
 │   │   └── seed/          # Script de données exemples
@@ -74,6 +75,7 @@ src/
 │   │   ├── User.ts
 │   │   ├── Student.ts
 │   │   ├── Publication.ts
+│   │   ├── Research.ts
 │   │   └── Event.ts
 │   ├── mongodb.ts        # Connexion MongoDB
 │   └── utils.ts          # Fonctions utilitaires
@@ -109,6 +111,11 @@ src/
 - Inscriptions et capacités
 - Types et statuts
 
+#### **Research**
+- Axes de recherche et domaines d'expertise
+- Responsables scientifiques
+- Tags pour l'affichage dynamique sur le site
+
 ## 🚀 **Installation et Déploiement**
 
 ### **Prérequis**
@@ -135,10 +142,19 @@ cp .env.example .env.local
 ```
 
 4. **Configurer MongoDB**
+   - Ajouter la chaîne de connexion dans `.env.local` :
 ```bash
-# Ajouter dans .env.local
-MONGODB_URI=mongodb://localhost:27017/mimsc-lab
+echo "MONGODB_URI=mongodb://localhost:27017/mimsc-lab" >> .env.local
 ```
+   - **Instance locale** : démarrer le service MongoDB (`mongod`) ou utiliser Docker :
+```bash
+docker run -d --name mimsc-mongo -p 27017:27017 mongo:7
+```
+   - **MongoDB Atlas** : remplacer l'URI par celle du cluster Atlas, par exemple :
+```bash
+MONGODB_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/mimsc-lab?retryWrites=true&w=majority
+```
+   - Vérifier la connexion en lançant `npm run dev` puis en visitant `/api/users` ou `/api/research`.
 
 5. **Démarrer le développement**
 ```bash
@@ -153,6 +169,7 @@ Pour ajouter des données exemples :
 # Utiliser curl ou un client API
 curl -X POST http://localhost:3000/api/seed
 ```
+La route de seed crée des utilisateurs, étudiants, publications, événements et axes de recherche pour alimenter les sections dynamiques.
 
 ### **Déploiement**
 
@@ -176,6 +193,11 @@ npm start
 - `GET /api/publications` - Récupérer toutes les publications
 - `GET /api/publications?limit=10` - Limiter les résultats
 - `POST /api/publications` - Créer une nouvelle publication
+
+### **Recherche**
+- `GET /api/research` - Récupérer les axes de recherche
+- `GET /api/research?limit=6` - Limiter l'affichage sur la page d'accueil
+- `POST /api/research` - Créer un nouvel axe
 
 ### **Événements**
 - `GET /api/events` - Récupérer tous les événements
