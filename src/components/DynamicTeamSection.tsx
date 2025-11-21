@@ -16,6 +16,7 @@ interface Student {
   specialization: string;
   thesisTitle?: string;
   researchArea: string;
+  startDate: string;
   status: 'ACTIVE' | 'COMPLETED' | 'ON_LEAVE' | 'WITHDRAWN';
   bio?: string;
   interests: string[];

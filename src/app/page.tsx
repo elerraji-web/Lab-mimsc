@@ -14,9 +14,50 @@ import { Mail, Phone, MapPin, Globe, Users, BookOpen, Microscope, Award } from '
 import DynamicTeamSection from '@/components/DynamicTeamSection';
 import DynamicPublications from '@/components/DynamicPublications';
 import DynamicEvents from '@/components/DynamicEvents';
+import DynamicFaculty from '@/components/DynamicFaculty';
 
 export default function Home() {
   const [activeSection, setActiveSection] = useState('home');
+
+  const researchAreas = [
+    {
+      title: 'Intelligence Artificielle',
+      subtitle: 'Machine Learning & Deep Learning',
+      description:
+        "Développement d'algorithmes avancés pour l'apprentissage automatique et l'analyse de données complexes.",
+      tags: ['ML', 'DL', 'NLP']
+    },
+    {
+      title: 'Traitement du Multimédia',
+      subtitle: 'Image, Audio & Vidéo',
+      description: 'Analyse et traitement avancé du contenu multimédia pour diverses applications industrielles.',
+      tags: ['CV', 'Audio', 'VR']
+    },
+    {
+      title: 'Modélisation Mathématique',
+      subtitle: 'Simulation & Optimisation',
+      description: 'Modélisation mathématique de systèmes complexes et optimisation pour la prise de décision.',
+      tags: ['Math', 'Optimisation', 'Simulation']
+    },
+    {
+      title: 'Big Data Analytics',
+      subtitle: 'Data Mining & Visualisation',
+      description: 'Extraction de connaissances à partir de grandes masses de données et visualisation interactive.',
+      tags: ['Data Mining', 'Analytics', 'Viz']
+    },
+    {
+      title: 'IoT & Systèmes Intelligents',
+      subtitle: 'Capteurs & Automatisation',
+      description: 'Développement de systèmes intelligents connectés pour l’industrie et les smart cities.',
+      tags: ['IoT', 'Smart Systems', 'Sensors']
+    },
+    {
+      title: 'Sécurité Informatique',
+      subtitle: 'Cryptographie & Privacy',
+      description: "Recherche en sécurité des systèmes d'information et protection des données personnelles.",
+      tags: ['Security', 'Crypto', 'Privacy']
+    }
+  ];
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -209,107 +250,24 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle>Intelligence Artificielle</CardTitle>
-                <CardDescription>Machine Learning & Deep Learning</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Développement d'algorithmes avancés pour l'apprentissage automatique et l'analyse de données complexes.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline">ML</Badge>
-                  <Badge variant="outline">DL</Badge>
-                  <Badge variant="outline">NLP</Badge>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle>Traitement du Multimédia</CardTitle>
-                <CardDescription>Image, Audio & Vidéo</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Analyse et traitement avancé du contenu multimédia pour diverses applications industrielles.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline">CV</Badge>
-                  <Badge variant="outline">Audio</Badge>
-                  <Badge variant="outline">VR</Badge>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle>Modélisation Mathématique</CardTitle>
-                <CardDescription>Simulation & Optimisation</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Modélisation mathématique de systèmes complexes et optimisation pour la prise de décision.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline">Math</Badge>
-                  <Badge variant="outline">Optimisation</Badge>
-                  <Badge variant="outline">Simulation</Badge>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle>Big Data Analytics</CardTitle>
-                <CardDescription>Data Mining & Visualisation</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Extraction de connaissances à partir de grandes masses de données et visualisation interactive.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline">Data Mining</Badge>
-                  <Badge variant="outline">Analytics</Badge>
-                  <Badge variant="outline">Viz</Badge>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle>IoT & Systèmes Intelligents</CardTitle>
-                <CardDescription>Capteurs & Automatisation</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Développement de systèmes intelligents connectés pour l'industrie et les smart cities.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline">IoT</Badge>
-                  <Badge variant="outline">Smart Systems</Badge>
-                  <Badge variant="outline">Sensors</Badge>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle>Sécurité Informatique</CardTitle>
-                <CardDescription>Cryptographie & Privacy</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Recherche en sécurité des systèmes d'information et protection des données personnelles.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline">Security</Badge>
-                  <Badge variant="outline">Crypto</Badge>
-                  <Badge variant="outline">Privacy</Badge>
-                </div>
-              </CardContent>
-            </Card>
+            {researchAreas.map((area) => (
+              <Card key={area.title} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <CardTitle>{area.title}</CardTitle>
+                  <CardDescription>{area.subtitle}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm text-muted-foreground">{area.description}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {area.tags.map((tag) => (
+                      <Badge key={tag} variant="outline">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
@@ -332,95 +290,8 @@ export default function Home() {
               <TabsTrigger value="master">Étudiants Master</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="faculty" className="mt-8">
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <Card>
-                  <CardHeader className="text-center">
-                    <Avatar className="w-20 h-20 mx-auto mb-4">
-                      <AvatarImage src="" />
-                      <AvatarFallback>DR</AvatarFallback>
-                    </Avatar>
-                    <CardTitle>Dr. Ahmed Mohammed</CardTitle>
-                    <CardDescription>Directeur du Laboratoire</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground text-center">
-                      Expert en intelligence artificielle et apprentissage automatique.
-                    </p>
-                    <div className="flex justify-center gap-2 mt-4">
-                      <Badge variant="outline">IA</Badge>
-                      <Badge variant="outline">ML</Badge>
-                    </div>
-                    <div className="mt-4">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => window.location.href = '/researcher'}
-                      >
-                        Voir le profil
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="text-center">
-                    <Avatar className="w-20 h-20 mx-auto mb-4">
-                      <AvatarImage src="" />
-                      <AvatarFallback>PR</AvatarFallback>
-                    </Avatar>
-                    <CardTitle>Pr. Fatima Zahra</CardTitle>
-                    <CardDescription>Co-Directrice</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground text-center">
-                      Spécialiste en traitement du signal et analyse d'images.
-                    </p>
-                    <div className="flex justify-center gap-2 mt-4">
-                      <Badge variant="outline">Signal</Badge>
-                      <Badge variant="outline">CV</Badge>
-                    </div>
-                    <div className="mt-4">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => window.location.href = '/researcher'}
-                      >
-                        Voir le profil
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="text-center">
-                    <Avatar className="w-20 h-20 mx-auto mb-4">
-                      <AvatarImage src="" />
-                      <AvatarFallback>DR</AvatarFallback>
-                    </Avatar>
-                    <CardTitle>Dr. Karim Omar</CardTitle>
-                    <CardDescription>Chercheur Senior</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground text-center">
-                      Expert en modélisation mathématique et optimisation.
-                    </p>
-                    <div className="flex justify-center gap-2 mt-4">
-                      <Badge variant="outline">Math</Badge>
-                      <Badge variant="outline">Optimisation</Badge>
-                    </div>
-                    <div className="mt-4">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => window.location.href = '/researcher'}
-                      >
-                        Voir le profil
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+          <TabsContent value="faculty" className="mt-8">
+              <DynamicFaculty />
             </TabsContent>
 
             <TabsContent value="phd" className="mt-8">

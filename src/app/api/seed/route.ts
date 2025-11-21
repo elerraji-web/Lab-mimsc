@@ -4,6 +4,7 @@ import User from '@/lib/models/User';
 import Student from '@/lib/models/Student';
 import Publication from '@/lib/models/Publication';
 import Event from '@/lib/models/Event';
+import Research from '@/lib/models/Research';
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,6 +15,7 @@ export async function POST(request: NextRequest) {
     await Student.deleteMany({});
     await Publication.deleteMany({});
     await Event.deleteMany({});
+    await Research.deleteMany({});
     
     // Create faculty users
     const faculty1 = await User.create({
@@ -65,6 +67,51 @@ export async function POST(request: NextRequest) {
       interests: ['Mathématiques', 'Optimisation', 'Modélisation'],
       userType: 'FACULTY'
     });
+
+    await Research.create([
+      {
+        title: 'Intelligence Artificielle',
+        subtitle: 'Machine Learning & Deep Learning',
+        description: 'Développement d\'algorithmes avancés pour l\'apprentissage automatique et l\'analyse de données complexes.',
+        tags: ['ML', 'DL', 'NLP'],
+        lead: faculty1._id
+      },
+      {
+        title: 'Traitement du Multimédia',
+        subtitle: 'Image, Audio & Vidéo',
+        description: 'Analyse et traitement avancé du contenu multimédia pour diverses applications industrielles.',
+        tags: ['CV', 'Audio', 'VR'],
+        lead: faculty2._id
+      },
+      {
+        title: 'Modélisation Mathématique',
+        subtitle: 'Simulation & Optimisation',
+        description: 'Modélisation mathématique de systèmes complexes et optimisation pour la prise de décision.',
+        tags: ['Math', 'Optimisation', 'Simulation'],
+        lead: faculty3._id
+      },
+      {
+        title: 'Big Data Analytics',
+        subtitle: 'Data Mining & Visualisation',
+        description: 'Extraction de connaissances à partir de grandes masses de données et visualisation interactive.',
+        tags: ['Data Mining', 'Analytics', 'Viz'],
+        lead: faculty1._id
+      },
+      {
+        title: 'IoT & Systèmes Intelligents',
+        subtitle: 'Capteurs & Automatisation',
+        description: 'Développement de systèmes intelligents connectés pour l\'industrie et les smart cities.',
+        tags: ['IoT', 'Smart Systems', 'Sensors'],
+        lead: faculty3._id
+      },
+      {
+        title: 'Sécurité Informatique',
+        subtitle: 'Cryptographie & Privacy',
+        description: 'Recherche en sécurité des systèmes d\'information et protection des données personnelles.',
+        tags: ['Security', 'Crypto', 'Privacy'],
+        lead: faculty2._id
+      }
+    ]);
 
     // Create PhD students
     const phd1 = await Student.create({

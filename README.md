@@ -15,7 +15,7 @@ Un site web dynamique pour le laboratoire MIMSC (Modélisation, Intelligence et 
 ### 📊 **Sections Dynamiques**
 
 #### 1. **Équipe**
-- **Enseignants-Chercheurs** : Membres permanents du laboratoire
+- **Enseignants-Chercheurs** : Membres permanents du laboratoire chargés depuis MongoDB
 - **Doctorants** : Étudiants en thèse avec superviseurs et domaines de recherche
 - **Étudiants Master** : Étudiants en master avec spécialisations
 
@@ -59,6 +59,7 @@ src/
 │   ├── api/               # Endpoints API
 │   │   ├── students/      # Gestion des étudiants
 │   │   ├── publications/  # Gestion des publications
+│   │   ├── research/      # Axes de recherche
 │   │   ├── events/        # Gestion des événements
 │   │   ├── users/         # Gestion des utilisateurs
 │   │   └── seed/          # Script de données exemples
@@ -74,6 +75,7 @@ src/
 │   │   ├── User.ts
 │   │   ├── Student.ts
 │   │   ├── Publication.ts
+│   │   ├── Research.ts
 │   │   └── Event.ts
 │   ├── mongodb.ts        # Connexion MongoDB
 │   └── utils.ts          # Fonctions utilitaires
@@ -109,6 +111,11 @@ src/
 - Inscriptions et capacités
 - Types et statuts
 
+#### **Research**
+- Axes de recherche et domaines d'expertise (affichage statique sur le site)
+- Responsables scientifiques
+- Tags pour contextualiser les axes
+
 ## 🚀 **Installation et Déploiement**
 
 ### **Prérequis**
@@ -135,10 +142,19 @@ cp .env.example .env.local
 ```
 
 4. **Configurer MongoDB**
+   - Ajouter la chaîne de connexion dans `.env.local` :
 ```bash
-# Ajouter dans .env.local
-MONGODB_URI=mongodb://localhost:27017/mimsc-lab
+echo "MONGODB_URI=mongodb://localhost:27017/mimsc-lab" >> .env.local
 ```
+   - **Instance locale** : démarrer le service MongoDB (`mongod`) ou utiliser Docker :
+```bash
+docker run -d --name mimsc-mongo -p 27017:27017 mongo:7
+```
+   - **MongoDB Atlas** : remplacer l'URI par celle du cluster Atlas, par exemple :
+```bash
+MONGODB_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/mimsc-lab?retryWrites=true&w=majority
+```
+   - Vérifier la connexion en lançant `npm run dev` puis en visitant `/api/users` ou `/api/students`.
 
 5. **Démarrer le développement**
 ```bash
@@ -153,6 +169,7 @@ Pour ajouter des données exemples :
 # Utiliser curl ou un client API
 curl -X POST http://localhost:3000/api/seed
 ```
+La route de seed crée des utilisateurs (incluant les enseignants-chercheurs), étudiants, publications, événements et axes de recherche pour alimenter les sections dynamiques.
 
 ### **Déploiement**
 
@@ -176,6 +193,15 @@ npm start
 - `GET /api/publications` - Récupérer toutes les publications
 - `GET /api/publications?limit=10` - Limiter les résultats
 - `POST /api/publications` - Créer une nouvelle publication
+
+### **Équipe**
+- `GET /api/users?type=FACULTY` - Récupérer les enseignants-chercheurs
+- `GET /api/students?type=PHD` - Récupérer les doctorants
+- `GET /api/students?type=MASTER` - Récupérer les étudiants Master
+
+### **Recherche**
+- `GET /api/research` - Récupérer les axes de recherche (utilisés pour l'administration ou d'autres vues)
+- `POST /api/research` - Créer un nouvel axe
 
 ### **Événements**
 - `GET /api/events` - Récupérer tous les événements
