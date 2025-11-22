@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Event from '@/lib/models/Event';
+import User from '@/lib/models/User';
 
 export async function GET(request: NextRequest) {
   try {
@@ -33,8 +34,6 @@ export async function GET(request: NextRequest) {
     }
     
     const events = await Event.find(query)
-      .populate('organizer', 'firstName lastName title position')
-      .populate('speakers', 'firstName lastName title position')
       .sort({ startDate: 1 })
       .limit(limit);
     
@@ -57,16 +56,17 @@ export async function POST(request: NextRequest) {
     
     const body = await request.json();
     
+    // Remove empty organizer field if present
+    if (body.organizer === '' || body.organizer === null) {
+      delete body.organizer;
+    }
+    
     const event = new Event(body);
     await event.save();
     
-    const populatedEvent = await Event.findById(event._id)
-      .populate('organizer', 'firstName lastName title position')
-      .populate('speakers', 'firstName lastName title position');
-    
     return NextResponse.json({
       success: true,
-      data: populatedEvent
+      data: event
     }, { status: 201 });
   } catch (error) {
     console.error('Error creating event:', error);

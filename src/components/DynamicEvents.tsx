@@ -14,7 +14,7 @@ interface Event {
   startDate: string;
   endDate: string;
   location: string;
-  organizer: {
+  organizer?: {
     firstName: string;
     lastName: string;
     title: string;
@@ -175,10 +175,12 @@ export default function DynamicEvents({ limit = 3, showHeader = true, upcomingOn
                   <MapPin className="w-4 h-4" />
                   <span>{event.location}</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Users className="w-4 h-4" />
-                  <span>Organisé par {event.organizer.firstName} {event.organizer.lastName}</span>
-                </div>
+                {event.organizer && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Users className="w-4 h-4" />
+                    <span>Organisé par {event.organizer.firstName} {event.organizer.lastName}</span>
+                  </div>
+                )}
               </div>
               
               {event.speakers && event.speakers.length > 0 && (
@@ -204,7 +206,12 @@ export default function DynamicEvents({ limit = 3, showHeader = true, upcomingOn
               </div>
               
               {event.externalUrl && (
-                <Button variant="outline" size="sm" className="w-full">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => window.open(event.externalUrl, '_blank')}
+                >
                   <ExternalLink className="w-4 h-4 mr-2" />
                   Plus d'informations
                 </Button>

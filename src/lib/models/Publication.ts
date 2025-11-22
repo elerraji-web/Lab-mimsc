@@ -17,9 +17,9 @@ const publicationSchema = new mongoose.Schema({
     default: 'JOURNAL_ARTICLE'
   },
   authors: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+    type: String,
+    required: true,
+    trim: true
   }],
   journal: {
     type: String,
@@ -55,6 +55,19 @@ const publicationSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  year: {
+    type: Number,
+    required: true
+  },
+  venue: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  pdfUrl: {
+    type: String,
+    trim: true
+  },
   publishedAt: {
     type: Date
   },
@@ -86,7 +99,7 @@ const publicationSchema = new mongoose.Schema({
 });
 
 publicationSchema.pre('save', function(next) {
-  this.updatedAt = Date.now();
+  this.updatedAt = new Date();
   next();
 });
 

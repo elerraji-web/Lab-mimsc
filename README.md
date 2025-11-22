@@ -123,7 +123,15 @@ src/
 - MongoDB (local ou cloud)
 - npm ou yarn
 
-### **Installation**
+### **Installation Rapide**
+
+#### 🪟 **Windows**
+Pour une installation automatisée sur Windows, consultez le guide dédié :
+- **[WINDOWS_SETUP.md](WINDOWS_SETUP.md)** - Guide complet pour Windows
+- **Script PowerShell** : `.\setup-windows.ps1`
+- **Script Batch** : `setup-windows.bat`
+
+#### 🐧 **Linux / macOS**
 
 1. **Cloner le projet**
 ```bash
@@ -156,7 +164,14 @@ MONGODB_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/mimsc-lab?retr
 ```
    - Vérifier la connexion en lançant `npm run dev` puis en visitant `/api/users` ou `/api/students`.
 
-5. **Démarrer le développement**
+5. **Configurer Prisma (SQLite)**
+```bash
+npm run db:generate
+npm run db:push
+npm run seed:admin
+```
+
+6. **Démarrer le développement**
 ```bash
 npm run dev
 ```

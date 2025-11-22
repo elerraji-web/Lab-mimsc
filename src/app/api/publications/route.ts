@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Publication from '@/lib/models/Publication';
+import User from '@/lib/models/User';
 
 export async function GET(request: NextRequest) {
   try {
@@ -30,9 +31,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
     
     const publications = await Publication.find(query)
-      .populate('authors', 'firstName lastName title position')
-      .populate('project', 'title')
-      .sort({ publishedAt: -1, createdAt: -1 })
+      .sort({ year: -1, createdAt: -1 })
       .skip(skip)
       .limit(limit);
     
@@ -66,13 +65,9 @@ export async function POST(request: NextRequest) {
     const publication = new Publication(body);
     await publication.save();
     
-    const populatedPublication = await Publication.findById(publication._id)
-      .populate('authors', 'firstName lastName title position')
-      .populate('project', 'title');
-    
     return NextResponse.json({
       success: true,
-      data: populatedPublication
+      data: publication
     }, { status: 201 });
   } catch (error) {
     console.error('Error creating publication:', error);
