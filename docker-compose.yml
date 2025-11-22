@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: mimsc-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-adminpassword}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-mimsc-lab}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-init:/docker-entrypoint-initdb.d
+    networks:
+      - mimsc-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Next.js Application
+  nextjs-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mimsc-nextjs
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # MongoDB Connection
+      MONGODB_URI: mongodb://${MONGO_USERNAME:-erraji0elmahdi}:${MONGO_PASSWORD:-Tri2soukain@}@mongodb:27017/${MONGO_DATABASE:-mimsc-lab}?authSource=${MONGO_DATABASE:-mimsc-lab}
+      
+      # Prisma/SQLite
+      DATABASE_URL: file:/app/prisma/dev.db
+      
+      # Next.js Configuration
+      NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-http://localhost:3000}
+      NODE_ENV: production
+      
+      # NextAuth Configuration
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-your-super-secret-key-change-this-in-production}
+      
+      # Admin Credentials
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@mimsc.ma}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@123456}
+    volumes:
+      - prisma_data:/app/prisma
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - mimsc-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  mimsc-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
+  prisma_data:
+    driver: local

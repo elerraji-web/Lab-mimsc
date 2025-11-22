@@ -21,6 +21,12 @@ const nextConfig: NextConfig = {
     // 构建时忽略ESLint错误
     ignoreDuringBuilds: true,
   },
+  // Docker compatibility: Allow connections from any host
+  experimental: {
+    serverActions: {
+      allowedOrigins: ["*"],
+    },
+  },
 };
 
 export default nextConfig;
