@@ -12,6 +12,7 @@ export interface AuthUser {
   email: string;
   position: string;
   userType: string;
+  role?: string;
 }
 
 export async function getCurrentUser(request: NextRequest): Promise<AuthUser | null> {
@@ -25,6 +26,14 @@ export async function getCurrentUser(request: NextRequest): Promise<AuthUser | n
       if (authHeader && authHeader.startsWith('Bearer ')) {
         token = authHeader.slice(7);
         console.log('DEBUG: token from Bearer:', token ? 'present' : 'null');
+      }
+      if (!token) {
+        const cookieHeader = request.headers.get('cookie');
+        console.log('DEBUG: cookie header token:', cookieHeader ? 'present' : 'null');
+        if (cookieHeader && cookieHeader.startsWith('Bearer ')) {
+          token = cookieHeader.slice(7);
+          console.log('DEBUG: token from cookie header bearer:', token ? 'present' : 'null');
+        }
       }
     }
 
@@ -47,7 +56,8 @@ export async function getCurrentUser(request: NextRequest): Promise<AuthUser | n
                 lastName: adminUser.lastName,
                 email: adminUser.email,
                 position: adminUser.position,
-                userType: adminUser.userType
+                userType: adminUser.userType,
+                role: adminUser.role
               };
             }
           }
@@ -87,7 +97,8 @@ export async function getCurrentUser(request: NextRequest): Promise<AuthUser | n
                 lastName: adminUser.lastName,
                 email: adminUser.email,
                 position: adminUser.position,
-                userType: adminUser.userType
+                userType: adminUser.userType,
+                role: adminUser.role
               };
             }
           }
@@ -106,7 +117,8 @@ export async function getCurrentUser(request: NextRequest): Promise<AuthUser | n
       lastName: user.lastName,
       email: user.email,
       position: user.position,
-      userType: user.userType
+      userType: user.userType,
+      role: user.role
     };
 
   } catch (error) {
@@ -126,56 +138,28 @@ export async function requireAuth(request: NextRequest): Promise<AuthUser> {
 }
 
 export async function requireAdmin(request: NextRequest): Promise<AuthUser> {
-  try {
-    await connectDB();
-    let token = request.cookies.get('admin_token')?.value;
-    if (!token) {
-      const authHeader = request.headers.get('Authorization');
-      if (authHeader && authHeader.startsWith('Bearer ')) {
-        token = authHeader.slice(7);
-      }
-    }
+  const user = await getCurrentUser(request);
 
-    if (!token) {
-      throw new Error('Admin authentication required');
-    }
+  const isPrivilegedUser = user && (
+    user.role === 'ADMIN' ||
+    user.userType === 'STAFF' ||
+    user.email === (process.env.ADMIN_EMAIL || 'admin@mimsc.ma')
+  );
 
-    const decoded = verify(token, JWT_SECRET) as any;
-
-    if (decoded.role !== 'admin') {
-      throw new Error('Admin authentication required');
-    }
-
-    const user = await User.findById(decoded.userId).select('-password');
-
-    if (!user) {
-      throw new Error('Admin authentication required');
-    }
-
-    return {
-      _id: user._id.toString(),
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      position: user.position,
-      userType: user.userType
-    };
-
-  } catch (error) {
-    throw new Error('Admin authentication required');
+  if (!user) {
+    throw new Error('Authentication required');
   }
+
+  if (!isPrivilegedUser) {
+    throw new Error('Forbidden');
+  }
+
+  return user;
 }
 export async function isAdmin(request: NextRequest): Promise<boolean> {
   try {
-    const token = request.cookies.get('admin_token')?.value;
-
-    if (!token) {
-      return false;
-    }
-
-    const decoded = verify(token, JWT_SECRET) as any;
-
-    return decoded.role === 'admin';
+    const user = await getCurrentUser(request);
+    return user?.role === 'ADMIN';
   } catch (error) {
     return false;
   }

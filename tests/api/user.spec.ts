@@ -361,7 +361,8 @@ describe('User API', () => {
       const userToDelete = await User.findOne({ email: 'delete@example.com' });
 
       const req = new NextRequest(`http://localhost:3000/api/users?id=${userToDelete!._id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { Authorization: adminCookie }
       });
 
       const res = await deleteUser(req);
@@ -399,6 +400,9 @@ describe('User API', () => {
 
       const res = await deleteUser(req);
       expect(res.status).toBe(401);
+    });
+  });
+
   describe('POST /api/events', () => {
     it('should not allow regular user to create event', async () => {
       const eventData = {
@@ -419,8 +423,6 @@ describe('User API', () => {
 
       const res = await createEvent(req);
       expect(res.status).toBe(403);
-    });
-  });
     });
   });
 });

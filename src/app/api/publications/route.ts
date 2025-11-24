@@ -68,6 +68,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('Request body:', body);
 
+    // Ensure authors is an array for downstream logic
+    if (!Array.isArray(body.authors)) {
+      body.authors = [];
+    }
+
     // Add current user to authors if not already present
     const userFullName = `${currentUser.firstName} ${currentUser.lastName}`;
     if (!body.authors.includes(userFullName)) {
@@ -135,7 +140,8 @@ export async function PUT(request: NextRequest) {
     }
 
     const userFullName = `${currentUser.firstName} ${currentUser.lastName}`;
-    if (!publication.authors.includes(userFullName)) {
+    const isAdminUser = currentUser.role === 'ADMIN';
+    if (!isAdminUser && !publication.authors.includes(userFullName)) {
       return NextResponse.json(
         { success: false, error: 'You can only modify your own publications' },
         { status: 403 }
@@ -197,7 +203,8 @@ export async function DELETE(request: NextRequest) {
     }
 
     const userFullName = `${currentUser.firstName} ${currentUser.lastName}`;
-    if (!publication.authors.includes(userFullName)) {
+    const isAdminUser = currentUser.role === 'ADMIN';
+    if (!isAdminUser && !publication.authors.includes(userFullName)) {
       return NextResponse.json(
         { success: false, error: 'You can only delete your own publications' },
         { status: 403 }
