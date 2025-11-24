@@ -93,6 +93,12 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    if (error instanceof Error && error.message === 'Forbidden') {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 403 }
+      );
+    }
     if (error instanceof Error && (error.message === 'Authentication required' || error.message === 'Admin authentication required')) {
       return NextResponse.json(
         { success: false, error: error.message },
@@ -135,6 +141,12 @@ export async function PUT(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error updating event:', error);
+    if (error instanceof Error && error.message === 'Forbidden') {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 403 }
+      );
+    }
     if (error instanceof Error && (error.message === 'Authentication required' || error.message === 'Admin authentication required')) {
       return NextResponse.json(
         { success: false, error: error.message },

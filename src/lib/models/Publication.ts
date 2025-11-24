@@ -11,7 +11,7 @@ const publicationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['JOURNAL_ARTICLE', 'CONFERENCE_PAPER', 'BOOK_CHAPTER', 'BOOK', 'THESIS', 'REPORT', 'PREPRINT'],
+    enum: ['JOURNAL_ARTICLE', 'CONFERENCE_PAPER', 'BOOK_CHAPTER', 'BOOK', 'THESIS', 'REPORT', 'PREPRINT', 'JOURNAL'],
     default: 'JOURNAL_ARTICLE'
   },
   authors: [{

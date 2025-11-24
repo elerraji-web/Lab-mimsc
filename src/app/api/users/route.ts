@@ -83,6 +83,12 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error('Error creating user(s):', error);
+    if (error instanceof Error && error.message === 'Forbidden') {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 403 }
+      );
+    }
     if (error instanceof Error && (error.message === 'Authentication required' || error.message === 'Admin authentication required')) {
       return NextResponse.json(
         { success: false, error: error.message },
@@ -111,6 +117,7 @@ export async function PUT(request: NextRequest) {
 
     const body = await request.json();
     const { id, ...updateData } = body;
+    console.log('Update target id:', id);
     console.log('Update data:', updateData);
 
     const isAdminUser = await isAdmin(request);
@@ -123,6 +130,10 @@ export async function PUT(request: NextRequest) {
     }
 
     const user = await User.findByIdAndUpdate(id, updateData, { new: true });
+
+    if (!user) {
+      console.log('User not found for update');
+    }
 
     if (!user) {
       return NextResponse.json(
@@ -138,6 +149,12 @@ export async function PUT(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error updating user:', error);
+    if (error instanceof Error && error.message === 'Forbidden') {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 403 }
+      );
+    }
     if (error instanceof Error && (error.message === 'Authentication required' || error.message === 'Admin authentication required')) {
       return NextResponse.json(
         { success: false, error: error.message },
@@ -158,6 +175,7 @@ export async function DELETE(request: NextRequest) {
     console.log('Authenticated admin user:', currentUser._id);
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
+    console.log('Delete target id:', id);
 
     if (!id) {
       return NextResponse.json(
@@ -190,6 +208,12 @@ export async function DELETE(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error deleting user:', error);
+    if (error instanceof Error && (error.message === 'Authentication required' || error.message === 'Admin authentication required')) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 401 }
+      );
+    }
     return NextResponse.json(
       { success: false, error: 'Failed to delete user' },
       { status: 500 }
