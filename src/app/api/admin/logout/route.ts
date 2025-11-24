@@ -1,7 +1,12 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/auth';
+import connectDB from '@/lib/mongodb';
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
+    await connectDB();
+    await requireAdmin(request);
+
     const response = NextResponse.json({
       success: true,
       message: 'Logged out successfully'
@@ -21,8 +26,8 @@ export async function POST() {
   } catch (error) {
     console.error('Logout error:', error);
     return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
+      { success: false, error: 'Admin authentication required' },
+      { status: 401 }
     );
   }
 }

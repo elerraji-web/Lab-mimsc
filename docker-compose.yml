@@ -34,7 +34,7 @@ services:
       - "3000:3000"
     environment:
       # MongoDB Connection
-      MONGODB_URI: mongodb://${MONGO_USERNAME:-erraji0elmahdi}:${MONGO_PASSWORD:-Tri2soukain@}@mongodb:27017/${MONGO_DATABASE:-mimsc-lab}?authSource=${MONGO_DATABASE:-mimsc-lab}
+      MONGODB_URI: mongodb://${MONGO_USERNAME:-erraji0elmahdi}:${MONGO_PASSWORD:-Tri2soukain%40}@mongodb:27017/${MONGO_DATABASE:-mimsc-lab}?authSource=${MONGO_DATABASE:-mimsc-lab}
       
       # Prisma/SQLite
       DATABASE_URL: file:/app/prisma/dev.db

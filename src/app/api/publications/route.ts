@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import mongoose from 'mongoose';
 import connectDB from '@/lib/mongodb';
 import Publication from '@/lib/models/Publication';
 import User from '@/lib/models/User';
-import { requireAuth } from '@/lib/auth';
+import { requireAdmin, requireAuth } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
@@ -100,6 +101,12 @@ export async function POST(request: NextRequest) {
         { status: 409 }
       );
     }
+    if (error instanceof Error && (error.message === 'Authentication required' || error.message === 'Admin authentication required')) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 401 }
+      );
+    }
     return NextResponse.json(
       { success: false, error: err.message || 'Failed to create publication' },
       { status: 500 }
@@ -110,13 +117,15 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     console.log('PUT /api/publications called');
+    const currentUser = await requireAuth(request);
+    console.log('Authenticated user:', currentUser._id);
     await connectDB();
 
     const body = await request.json();
     const { id, ...updateData } = body;
     console.log('Update data:', updateData);
 
-    const publication = await Publication.findByIdAndUpdate(id, updateData, { new: true });
+    const publication = await Publication.findById(id);
 
     if (!publication) {
       return NextResponse.json(
@@ -125,13 +134,29 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    console.log('Publication updated successfully:', publication);
+    const userFullName = `${currentUser.firstName} ${currentUser.lastName}`;
+    if (!publication.authors.includes(userFullName)) {
+      return NextResponse.json(
+        { success: false, error: 'You can only modify your own publications' },
+        { status: 403 }
+      );
+    }
+
+    const updatedPublication = await Publication.findByIdAndUpdate(id, updateData, { new: true });
+
+    console.log('Publication updated successfully:', updatedPublication);
     return NextResponse.json({
       success: true,
-      data: publication
+      data: updatedPublication
     });
   } catch (error) {
     console.error('Error updating publication:', error);
+    if (error instanceof Error && (error.message === 'Authentication required' || error.message === 'Admin authentication required')) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 401 }
+      );
+    }
     return NextResponse.json(
       { success: false, error: 'Failed to update publication' },
       { status: 500 }
@@ -142,6 +167,8 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     console.log('DELETE /api/publications called');
+    const currentUser = await requireAuth(request);
+    console.log('Authenticated user:', currentUser._id);
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
@@ -152,8 +179,15 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid ID' },
+        { status: 400 }
+      );
+    }
+
     await connectDB();
-    const publication = await Publication.findByIdAndDelete(id);
+    const publication = await Publication.findById(id);
 
     if (!publication) {
       return NextResponse.json(
@@ -162,6 +196,16 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    const userFullName = `${currentUser.firstName} ${currentUser.lastName}`;
+    if (!publication.authors.includes(userFullName)) {
+      return NextResponse.json(
+        { success: false, error: 'You can only delete your own publications' },
+        { status: 403 }
+      );
+    }
+
+    await Publication.findByIdAndDelete(id);
+
     console.log('Publication deleted successfully:', publication);
     return NextResponse.json({
       success: true,
@@ -169,6 +213,12 @@ export async function DELETE(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error deleting publication:', error);
+    if (error instanceof Error && (error.message === 'Authentication required' || error.message === 'Admin authentication required')) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 401 }
+      );
+    }
     return NextResponse.json(
       { success: false, error: 'Failed to delete publication' },
       { status: 500 }

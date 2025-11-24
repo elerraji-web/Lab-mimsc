@@ -26,12 +26,12 @@ const studentSchema = new mongoose.Schema({
   },
   program: {
     type: String,
-    required: true,
+    required: false,
     trim: true
   },
   specialization: {
     type: String,
-    required: true,
+    required: false,
     trim: true
   },
   supervisor: {
@@ -49,12 +49,12 @@ const studentSchema = new mongoose.Schema({
   },
   researchArea: {
     type: String,
-    required: true,
+    required: false,
     trim: true
   },
   startDate: {
     type: Date,
-    required: true
+    required: false
   },
   expectedEndDate: {
     type: Date,

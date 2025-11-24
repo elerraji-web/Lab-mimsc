@@ -29,7 +29,6 @@ const userSchema = new mongoose.Schema({
   },
   position: {
     type: String,
-    required: true,
     trim: true
   },
   department: {
@@ -66,8 +65,12 @@ const userSchema = new mongoose.Schema({
   userType: {
     type: String,
     required: true,
-    enum: ['FACULTY', 'STAFF', 'STUDENT', 'POSTDOC'],
+    enum: ['FACULTY', 'STAFF', 'STUDENT', 'POSTDOC', 'RESEARCHER', 'PROFESSOR'],
     default: 'FACULTY'
+  },
+  role: {
+    type: String,
+    default: 'USER'
   },
   isActive: {
     type: Boolean,

@@ -1,10 +1,6 @@
 import mongoose from 'mongoose';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mimsc-lab';
-
-if (!MONGODB_URI) {
-  throw new Error('Please define the MONGODB_URI environment variable inside .env.local');
-}
+const getMongoURI = () => process.env.MONGODB_URI || 'mongodb://localhost:27017/mimsc-lab';
 
 let cached = global.mongoose;
 
@@ -22,8 +18,9 @@ async function connectDB() {
       bufferCommands: false,
     };
 
-    console.log('DEBUG: Connecting to MongoDB with URI:', MONGODB_URI);
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
+    const uri = getMongoURI();
+    console.log('DEBUG: Connecting to MongoDB with URI:', uri);
+    cached.promise = mongoose.connect(uri, opts).then((mongoose) => {
       console.log('DEBUG: MongoDB connected successfully');
       return mongoose;
     });

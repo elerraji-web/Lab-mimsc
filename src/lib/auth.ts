@@ -16,18 +16,87 @@ export interface AuthUser {
 
 export async function getCurrentUser(request: NextRequest): Promise<AuthUser | null> {
   try {
-    const token = request.cookies.get('user_token')?.value;
+    console.log('DEBUG: getCurrentUser called');
+    let token = request.cookies.get('user_token')?.value;
+    console.log('DEBUG: user_token from cookies:', token ? 'present' : 'null');
+    if (!token) {
+      const authHeader = request.headers.get('Authorization');
+      console.log('DEBUG: Authorization header:', authHeader ? 'present' : 'null');
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.slice(7);
+        console.log('DEBUG: token from Bearer:', token ? 'present' : 'null');
+      }
+    }
 
     if (!token) {
+      console.log('DEBUG: no user token, checking admin token');
+      // Check admin token if user token failed
+      const adminToken = request.cookies.get('admin_token')?.value;
+      console.log('DEBUG: admin_token from cookies:', adminToken ? 'present' : 'null');
+      if (adminToken) {
+        try {
+          const decoded = verify(adminToken, JWT_SECRET) as any;
+          console.log('DEBUG: admin token decoded role:', decoded.role);
+          if (decoded.role === 'admin') {
+            const adminUser = await User.findById(decoded.userId).select('-password');
+            console.log('DEBUG: admin user found:', adminUser ? 'yes' : 'no');
+            if (adminUser) {
+              return {
+                _id: adminUser._id.toString(),
+                firstName: adminUser.firstName,
+                lastName: adminUser.lastName,
+                email: adminUser.email,
+                position: adminUser.position,
+                userType: adminUser.userType
+              };
+            }
+          }
+        } catch (adminError) {
+          console.log('DEBUG: admin token error:', adminError);
+          // Ignore admin token errors
+        }
+      }
+      console.log('DEBUG: returning null');
       return null;
     }
 
+    console.log('DEBUG: verifying user token');
     const decoded = verify(token, JWT_SECRET) as any;
+    console.log('DEBUG: user token decoded userId:', decoded.userId);
 
     await connectDB();
     const user = await User.findById(decoded.userId).select('-password');
+    console.log('DEBUG: user found:', user ? 'yes' : 'no');
 
     if (!user) {
+      console.log('DEBUG: user not found, checking admin token');
+      // Check admin token if user token failed
+      const adminToken = request.cookies.get('admin_token')?.value;
+      console.log('DEBUG: admin_token from cookies:', adminToken ? 'present' : 'null');
+      if (adminToken) {
+        try {
+          const decoded = verify(adminToken, JWT_SECRET) as any;
+          console.log('DEBUG: admin token decoded role:', decoded.role);
+          if (decoded.role === 'admin') {
+            const adminUser = await User.findById(decoded.userId).select('-password');
+            console.log('DEBUG: admin user found:', adminUser ? 'yes' : 'no');
+            if (adminUser) {
+              return {
+                _id: adminUser._id.toString(),
+                firstName: adminUser.firstName,
+                lastName: adminUser.lastName,
+                email: adminUser.email,
+                position: adminUser.position,
+                userType: adminUser.userType
+              };
+            }
+          }
+        } catch (adminError) {
+          console.log('DEBUG: admin token error:', adminError);
+          // Ignore admin token errors
+        }
+      }
+      console.log('DEBUG: returning null');
       return null;
     }
 
@@ -56,9 +125,16 @@ export async function requireAuth(request: NextRequest): Promise<AuthUser> {
   return user;
 }
 
-export async function requireAdmin(request: NextRequest): Promise<void> {
+export async function requireAdmin(request: NextRequest): Promise<AuthUser> {
   try {
-    const token = request.cookies.get('admin_token')?.value;
+    await connectDB();
+    let token = request.cookies.get('admin_token')?.value;
+    if (!token) {
+      const authHeader = request.headers.get('Authorization');
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.slice(7);
+      }
+    }
 
     if (!token) {
       throw new Error('Admin authentication required');
@@ -70,7 +146,37 @@ export async function requireAdmin(request: NextRequest): Promise<void> {
       throw new Error('Admin authentication required');
     }
 
+    const user = await User.findById(decoded.userId).select('-password');
+
+    if (!user) {
+      throw new Error('Admin authentication required');
+    }
+
+    return {
+      _id: user._id.toString(),
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      position: user.position,
+      userType: user.userType
+    };
+
   } catch (error) {
     throw new Error('Admin authentication required');
+  }
+}
+export async function isAdmin(request: NextRequest): Promise<boolean> {
+  try {
+    const token = request.cookies.get('admin_token')?.value;
+
+    if (!token) {
+      return false;
+    }
+
+    const decoded = verify(token, JWT_SECRET) as any;
+
+    return decoded.role === 'admin';
+  } catch (error) {
+    return false;
   }
 }

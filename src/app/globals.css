@@ -150,7 +150,7 @@
   }
   body {
     @apply text-foreground font-serif;
-    background-image: url('/fond.png');
+    /*background-image: url('/fond.png');*/
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;

@@ -16,6 +16,7 @@ import DynamicTeamSection from '@/components/DynamicTeamSection';
 import DynamicPublications from '@/components/DynamicPublications';
 import DynamicEvents from '@/components/DynamicEvents';
 import DynamicFaculty from '@/components/DynamicFaculty';
+import EventSlideshowCard from '@/components/EventSlideshowCard';
 
 export default function Home() {
   const [activeSection, setActiveSection] = useState('home');
@@ -116,6 +117,10 @@ export default function Home() {
           </div>
         </nav>
       </header>
+
+      <div className="absolute top-[80px] right-5 z-10">
+        <EventSlideshowCard />
+      </div>
 
       {/* Hero Section - Formal Academic Design */}
       <section id="home" className="pt-24 min-h-screen flex items-center bg-card border-b-2 border-primary/10">

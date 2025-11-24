@@ -196,6 +196,36 @@ npm run build
 npm start
 ```
 
+## 🧪 **Tests**
+
+### **Prérequis**
+
+- Docker installé
+- Dépendances npm installées (`npm install`)
+
+### **Configuration**
+
+Démarrer MongoDB avec Docker :
+
+```bash
+docker-compose up -d mongo
+```
+
+### **Exécution des tests**
+
+- `npm test` : Exécute tous les tests de sanity (APIs utilisateur et admin)
+- Scripts disponibles :
+  - `"test": "jest"`
+  - `"test:api": "jest tests/api"`
+
+### **Description**
+
+Les tests vérifient la fonctionnalité de base des endpoints `/api/users*` et `/api/admin/*`, incluant l'authentification, CRUD et approbations.
+
+### **Note**
+
+Les tests utilisent des données de test seedées (`testUser`, `testAdmin`) et nettoient la base de données entre les exécutions.
+
 ## 🔌 **API Endpoints**
 
 ### **Étudiants**

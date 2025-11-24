@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import mongoose from 'mongoose';
 import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
-import { requireAuth } from '@/lib/auth';
+import { requireAuth, requireAdmin, isAdmin } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,6 +32,10 @@ export async function GET(request: NextRequest) {
       query.approvalStatus = approvalStatus;
     }
 
+    const isAdminUser = await isAdmin(request);
+    if (!isAdminUser) {
+      query.approvalStatus = 'APPROVED';
+    }
     const users = await User.find(query)
       .sort({ order: 1, lastName: 1, firstName: 1 });
     
@@ -50,6 +55,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     console.log('POST /api/users called');
+    const currentUser = await requireAdmin(request);
+    console.log('Authenticated admin user:', currentUser._id);
     await connectDB();
 
     const body = await request.json();
@@ -76,6 +83,12 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error('Error creating user(s):', error);
+    if (error instanceof Error && (error.message === 'Authentication required' || error.message === 'Admin authentication required')) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 401 }
+      );
+    }
     if (error instanceof Error && error.name === 'ValidationError') {
       return NextResponse.json(
         { success: false, error: 'Validation error', details: (error as any).errors },
@@ -100,8 +113,9 @@ export async function PUT(request: NextRequest) {
     const { id, ...updateData } = body;
     console.log('Update data:', updateData);
 
-    // Users can only edit their own profile
-    if (id !== currentUser._id) {
+    const isAdminUser = await isAdmin(request);
+    // Users can only edit their own profile unless they are admin
+    if (!isAdminUser && id !== currentUser._id) {
       return NextResponse.json(
         { success: false, error: 'You can only edit your own profile' },
         { status: 403 }
@@ -124,6 +138,12 @@ export async function PUT(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error updating user:', error);
+    if (error instanceof Error && (error.message === 'Authentication required' || error.message === 'Admin authentication required')) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 401 }
+      );
+    }
     return NextResponse.json(
       { success: false, error: 'Failed to update user' },
       { status: 500 }
@@ -134,12 +154,21 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     console.log('DELETE /api/users called');
+    const currentUser = await requireAdmin(request);
+    console.log('Authenticated admin user:', currentUser._id);
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
       return NextResponse.json(
         { success: false, error: 'User ID required' },
+        { status: 400 }
+      );
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid ID' },
         { status: 400 }
       );
     }

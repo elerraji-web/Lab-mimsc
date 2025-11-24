@@ -39,7 +39,7 @@ export default function DynamicAllUsers({ limit }: DynamicAllUsersProps) {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await fetch(`/api/users?isActive=true`);
+        const response = await fetch(`/api/users?isActive=true&approvalStatus=APPROVED`);
         if (!response.ok) {
           throw new Error('Failed to fetch users');
         }
