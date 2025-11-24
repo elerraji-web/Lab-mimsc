@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { signIn } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,10 +11,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { LogIn, UserPlus, Shield } from 'lucide-react';
+import { LogIn, UserPlus, Shield, Chrome, Loader2 } from 'lucide-react';
 
 export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [loginForm, setLoginForm] = useState({
     email: '',
     password: ''
@@ -115,6 +117,15 @@ export default function AuthPage() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    try {
+      setIsGoogleLoading(true);
+      await signIn('google', { callbackUrl: '/user' });
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -174,6 +185,25 @@ export default function AuthPage() {
                   </div>
                   <Button type="submit" className="w-full rounded-none" disabled={isLoading}>
                     {isLoading ? 'Signing in...' : 'Sign In'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full rounded-none"
+                    disabled={isLoading || isGoogleLoading}
+                    onClick={handleGoogleSignIn}
+                  >
+                    {isGoogleLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Connecting to Google...
+                      </>
+                    ) : (
+                      <>
+                        <Chrome className="mr-2 h-4 w-4" />
+                        Continue with Google
+                      </>
+                    )}
                   </Button>
                 </form>
                 <div className="mt-4 text-center">
@@ -272,6 +302,25 @@ export default function AuthPage() {
                   <Button type="submit" className="w-full rounded-none" disabled={isLoading}>
                     {isLoading ? 'Creating account...' : 'Create Account'}
                   </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full rounded-none"
+                    disabled={isLoading || isGoogleLoading}
+                    onClick={handleGoogleSignIn}
+                  >
+                    {isGoogleLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Connecting to Google...
+                      </>
+                    ) : (
+                      <>
+                        <Chrome className="mr-2 h-4 w-4" />
+                        Continue with Google
+                      </>
+                    )}
+                  </Button>
                 </form>
               </CardContent>
             </Card>
@@ -281,7 +330,7 @@ export default function AuthPage() {
         {/* Footer */}
         <div className="text-center mt-8">
           <Link href="/" className="text-sm text-muted-foreground hover:text-primary">
-            ← Back to Home
+            <- Back to Home
           </Link>
         </div>
       </div>

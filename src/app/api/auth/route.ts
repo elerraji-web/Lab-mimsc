@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sign, verify } from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import { getToken } from 'next-auth/jwt';
 import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
 
@@ -126,6 +127,14 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      if (!user.password) {
+        console.log('User has no password set, prompt Google sign-in');
+        return NextResponse.json(
+          { success: false, error: 'This account uses Google sign-in. Please continue with Google.' },
+          { status: 400 }
+        );
+      }
+
       // Check password
       console.log('Checking password...');
       const isValidPassword = await bcrypt.compare(password, user.password);
@@ -202,6 +211,19 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    const nextAuthToken = await getToken({ req: request, secret: JWT_SECRET });
+    if (nextAuthToken?.sub) {
+      await connectDB();
+      const user = await User.findById(nextAuthToken.sub).select('-password');
+
+      if (user) {
+        return NextResponse.json({
+          success: true,
+          user
+        });
+      }
+    }
+
     // Verify user token
     const token = request.cookies.get('user_token')?.value;
 
@@ -250,6 +272,27 @@ export async function DELETE(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
+      maxAge: 0,
+      path: '/'
+    });
+    response.cookies.set('next-auth.session-token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 0,
+      path: '/'
+    });
+    response.cookies.set('__Secure-next-auth.session-token', '', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      maxAge: 0,
+      path: '/'
+    });
+    response.cookies.set('next-auth.csrf-token', '', {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
       maxAge: 0,
       path: '/'
     });

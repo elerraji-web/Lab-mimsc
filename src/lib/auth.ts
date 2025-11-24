@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { verify } from 'jsonwebtoken';
+import { getToken } from 'next-auth/jwt';
 import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
 
@@ -18,6 +19,24 @@ export interface AuthUser {
 export async function getCurrentUser(request: NextRequest): Promise<AuthUser | null> {
   try {
     console.log('DEBUG: getCurrentUser called');
+    const sessionToken = await getToken({ req: request, secret: JWT_SECRET });
+    if (sessionToken?.sub) {
+      console.log('DEBUG: next-auth token found');
+      await connectDB();
+      const sessionUser = await User.findById(sessionToken.sub).select('-password');
+      if (sessionUser) {
+        return {
+          _id: sessionUser._id.toString(),
+          firstName: sessionUser.firstName,
+          lastName: sessionUser.lastName,
+          email: sessionUser.email,
+          position: sessionUser.position,
+          userType: sessionUser.userType,
+          role: sessionUser.role
+        };
+      }
+    }
+
     let token = request.cookies.get('user_token')?.value;
     console.log('DEBUG: user_token from cookies:', token ? 'present' : 'null');
     if (!token) {
