@@ -47,6 +47,7 @@ export async function getCurrentUser(request: NextRequest): Promise<AuthUser | n
           const decoded = verify(adminToken, JWT_SECRET) as any;
           console.log('DEBUG: admin token decoded role:', decoded.role);
           if (decoded.role === 'admin') {
+            await connectDB();
             const adminUser = await User.findById(decoded.userId).select('-password');
             console.log('DEBUG: admin user found:', adminUser ? 'yes' : 'no');
             if (adminUser) {
@@ -88,6 +89,7 @@ export async function getCurrentUser(request: NextRequest): Promise<AuthUser | n
           const decoded = verify(adminToken, JWT_SECRET) as any;
           console.log('DEBUG: admin token decoded role:', decoded.role);
           if (decoded.role === 'admin') {
+            await connectDB();
             const adminUser = await User.findById(decoded.userId).select('-password');
             console.log('DEBUG: admin user found:', adminUser ? 'yes' : 'no');
             if (adminUser) {

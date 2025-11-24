@@ -71,6 +71,7 @@ interface User {
   position: string;
   department?: string;
   phone?: string;
+  avatar?: string;
   userType: string;
   bio?: string;
   isActive: boolean;
@@ -86,6 +87,7 @@ interface UserFormData {
   position: string;
   department: string;
   phone: string;
+  avatar: string;
   userType: string;
   bio: string;
 }
@@ -149,6 +151,7 @@ interface EventFormData {
   registrationDeadline: string;
   externalUrl: string;
   tags: string;
+  poster: string;
   image: string;
 }
 
@@ -170,6 +173,7 @@ interface Event {
   registrationDeadline?: string;
   externalUrl?: string;
   tags?: string[];
+  poster?: string;
   image?: string;
   createdAt: string;
   updatedAt: string;
@@ -316,6 +320,7 @@ export default function AdminDashboard() {
     position: '',
     department: '',
     phone: '',
+    avatar: '',
     userType: 'FACULTY',
     bio: ''
   });
@@ -364,6 +369,7 @@ export default function AdminDashboard() {
     registrationDeadline: '',
     externalUrl: '',
     tags: '',
+    poster: '',
     image: ''
   });
   const [events, setEvents] = useState<Event[]>([]);
@@ -371,6 +377,8 @@ export default function AdminDashboard() {
   const router = useRouter();
   const { toast } = useToast();
   const [showDOIFetcher, setShowDOIFetcher] = useState(false);
+  const [posterFile, setPosterFile] = useState<File | null>(null);
+  const [userAvatarFile, setUserAvatarFile] = useState<File | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -513,6 +521,26 @@ export default function AdminDashboard() {
     loadEvents();
   }, []);
 
+  const uploadFile = async (file: File, type: 'avatar' | 'poster') => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', type);
+
+    const response = await fetch('/api/uploads', {
+      method: 'POST',
+      body: formData,
+      credentials: 'include'
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => null);
+      throw new Error(error?.error || 'File upload failed');
+    }
+
+    const data = await response.json();
+    return data.path as string;
+  };
+
   const checkAuth = async () => {
     try {
       const response = await fetch('/api/admin/verify', {
@@ -603,10 +631,12 @@ export default function AdminDashboard() {
       position: '',
       department: '',
       phone: '',
+      avatar: '',
       userType: 'FACULTY',
       bio: ''
     });
     setEditingUser(null);
+    setUserAvatarFile(null);
   };
 
   const resetPublicationForm = () => {
@@ -650,9 +680,11 @@ export default function AdminDashboard() {
       registrationDeadline: '',
       externalUrl: '',
       tags: '',
+      poster: '',
       image: ''
     });
     setEditingEvent(null);
+    setPosterFile(null);
     setEventValidationErrors([]);
   };
 
@@ -726,8 +758,13 @@ export default function AdminDashboard() {
     setIsSubmitting(true);
 
     try {
+      let avatarPath = userForm.avatar;
+      if (userAvatarFile) {
+        avatarPath = await uploadFile(userAvatarFile, 'avatar');
+      }
+
       const method = editingUser ? 'PUT' : 'POST';
-      const body = editingUser ? { id: editingUser._id, ...userForm } : userForm;
+      const body = editingUser ? { id: editingUser._id, ...userForm, avatar: avatarPath } : { ...userForm, avatar: avatarPath };
 
       const response = await fetch('/api/users', {
         method,
@@ -758,7 +795,9 @@ export default function AdminDashboard() {
     } catch (error) {
       toast({
         title: 'Error',
-        description: `Failed to ${editingUser ? 'update' : 'add'} user`,
+        description: error instanceof Error
+          ? error.message
+          : `Failed to ${editingUser ? 'update' : 'add'} user`,
         variant: 'destructive',
       });
     } finally {
@@ -776,9 +815,11 @@ export default function AdminDashboard() {
       position: user.position,
       department: user.department || '',
       phone: user.phone || '',
+      avatar: user.avatar || '',
       userType: user.userType,
       bio: user.bio || ''
     });
+    setUserAvatarFile(null);
     setIsAddUserOpen(true);
   };
 
@@ -1012,18 +1053,25 @@ export default function AdminDashboard() {
     setIsSubmitting(true);
 
     try {
+      let posterPath = eventForm.poster;
+      if (posterFile) {
+        posterPath = await uploadFile(posterFile, 'poster');
+      }
+
       const method = editingEvent ? 'PUT' : 'POST';
       const body = editingEvent
         ? {
             id: editingEvent._id,
             ...eventForm,
             tags: eventForm.tags ? eventForm.tags.split(',').map(t => t.trim()) : [],
-            maxAttendees: eventForm.maxAttendees ? parseInt(eventForm.maxAttendees) : undefined
+            maxAttendees: eventForm.maxAttendees ? parseInt(eventForm.maxAttendees) : undefined,
+            poster: posterPath
           }
         : {
             ...eventForm,
             tags: eventForm.tags ? eventForm.tags.split(',').map(t => t.trim()) : [],
-            maxAttendees: eventForm.maxAttendees ? parseInt(eventForm.maxAttendees) : undefined
+            maxAttendees: eventForm.maxAttendees ? parseInt(eventForm.maxAttendees) : undefined,
+            poster: posterPath
           };
 
       const response = await fetch('/api/events', {
@@ -1055,7 +1103,9 @@ export default function AdminDashboard() {
     } catch (error) {
       toast({
         title: 'Error',
-        description: `Failed to ${editingEvent ? 'update' : 'add'} event`,
+        description: error instanceof Error
+          ? error.message
+          : `Failed to ${editingEvent ? 'update' : 'add'} event`,
         variant: 'destructive',
       });
     } finally {
@@ -1069,8 +1119,8 @@ export default function AdminDashboard() {
       title: event.title,
       description: event.description,
       type: event.type,
-      startDate: event.startDate.split('T')[0], // assuming ISO string
-      endDate: event.endDate.split('T')[0],
+      startDate: event.startDate.slice(0, 16),
+      endDate: event.endDate.slice(0, 16),
       location: event.location,
       organizer: event.organizer || '',
       speakers: event.speakers || [],
@@ -1079,12 +1129,14 @@ export default function AdminDashboard() {
       isPublic: event.isPublic,
       status: event.status,
       registrationRequired: event.registrationRequired,
-      registrationDeadline: event.registrationDeadline ? event.registrationDeadline.split('T')[0] : '',
+      registrationDeadline: event.registrationDeadline ? event.registrationDeadline.slice(0, 16) : '',
       externalUrl: event.externalUrl || '',
       tags: event.tags ? event.tags.join(', ') : '',
+      poster: event.poster || '',
       image: event.image || ''
     });
     setEventValidationErrors([]);
+    setPosterFile(null);
     setIsAddEventOpen(true);
   };
 
@@ -1406,6 +1458,33 @@ export default function AdminDashboard() {
                             onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
                             required
                           />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="avatar">Profile Picture</Label>
+                          <Input
+                            id="avatar"
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => setUserAvatarFile(e.target.files?.[0] || null)}
+                          />
+                          {userAvatarFile && (
+                            <p className="text-sm text-muted-foreground">
+                              Selected file: {userAvatarFile.name}
+                            </p>
+                          )}
+                          {!userAvatarFile && userForm.avatar && (
+                            <p className="text-sm text-muted-foreground">
+                              Current picture:{' '}
+                              <a
+                                href={userForm.avatar}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="underline"
+                              >
+                                View
+                              </a>
+                            </p>
+                          )}
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
@@ -2159,6 +2238,33 @@ export default function AdminDashboard() {
                           />
                         </div>
                         <div className="space-y-2">
+                          <Label htmlFor="poster">Poster (PDF or image)</Label>
+                          <Input
+                            id="poster"
+                            type="file"
+                            accept=".pdf,image/*"
+                            onChange={(e) => setPosterFile(e.target.files?.[0] || null)}
+                          />
+                          {posterFile && (
+                            <p className="text-sm text-muted-foreground">
+                              Selected file: {posterFile.name}
+                            </p>
+                          )}
+                          {!posterFile && eventForm.poster && (
+                            <p className="text-sm text-muted-foreground">
+                              Current file:{' '}
+                              <a
+                                href={eventForm.poster}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="underline"
+                              >
+                                View poster
+                              </a>
+                            </p>
+                          )}
+                        </div>
+                        <div className="space-y-2">
                           <Label htmlFor="image">Image URL</Label>
                           <Input
                             id="image"
@@ -2188,6 +2294,7 @@ export default function AdminDashboard() {
                       <TableHead>Type</TableHead>
                       <TableHead>Start Date</TableHead>
                       <TableHead>Location</TableHead>
+                      <TableHead>Poster</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
@@ -2203,6 +2310,20 @@ export default function AdminDashboard() {
                         </TableCell>
                         <TableCell>{new Date(event.startDate).toLocaleDateString()}</TableCell>
                         <TableCell className="max-w-xs truncate" title={event.location}>{event.location}</TableCell>
+                        <TableCell>
+                          {event.poster ? (
+                            <a
+                              href={event.poster}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-primary underline"
+                            >
+                              View
+                            </a>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
                         <TableCell>
                           <Badge variant="secondary" className="rounded-none">
                             {event.status}

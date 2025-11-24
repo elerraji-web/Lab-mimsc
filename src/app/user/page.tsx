@@ -91,6 +91,7 @@ interface Event {
   registrationDeadline?: string;
   externalUrl?: string;
   tags?: string[];
+  poster?: string;
   image?: string;
   createdAt: string;
   updatedAt: string;
@@ -132,6 +133,7 @@ interface EventFormData {
   registrationDeadline: string;
   externalUrl: string;
   tags: string;
+  poster: string;
   image: string;
 }
 
@@ -181,6 +183,7 @@ export default function UserDashboard() {
     registrationDeadline: '',
     externalUrl: '',
     tags: '',
+    poster: '',
     image: ''
   });
   const [profileForm, setProfileForm] = useState({
@@ -193,12 +196,15 @@ export default function UserDashboard() {
     office: '',
     bio: '',
     interests: '',
+    avatar: '',
     googleScholar: '',
     researchGate: '',
     linkedin: '',
     orcid: '',
     website: ''
   });
+  const [posterFile, setPosterFile] = useState<File | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
@@ -206,6 +212,26 @@ export default function UserDashboard() {
   useEffect(() => {
     checkAuth();
   }, []);
+
+  const uploadFile = async (file: File, type: 'avatar' | 'poster') => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', type);
+
+    const response = await fetch('/api/uploads', {
+      method: 'POST',
+      body: formData,
+      credentials: 'include'
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => null);
+      throw new Error(error?.error || 'File upload failed');
+    }
+
+    const data = await response.json();
+    return data.path as string;
+  };
 
   const checkAuth = async () => {
     try {
@@ -313,9 +339,11 @@ export default function UserDashboard() {
       registrationDeadline: '',
       externalUrl: '',
       tags: '',
+      poster: '',
       image: ''
     });
     setEditingEvent(null);
+    setPosterFile(null);
   };
 
   const handleAddPublication = async (e: FormEvent) => {
@@ -384,6 +412,11 @@ export default function UserDashboard() {
     setIsSubmitting(true);
 
     try {
+      let posterPath = eventForm.poster;
+      if (posterFile) {
+        posterPath = await uploadFile(posterFile, 'poster');
+      }
+
       const method = editingEvent ? 'PUT' : 'POST';
       const body = editingEvent
         ? {
@@ -394,7 +427,8 @@ export default function UserDashboard() {
               : [],
             maxAttendees: eventForm.maxAttendees
               ? parseInt(eventForm.maxAttendees, 10)
-              : undefined
+              : undefined,
+            poster: posterPath
           }
         : {
             ...eventForm,
@@ -403,7 +437,8 @@ export default function UserDashboard() {
               : [],
             maxAttendees: eventForm.maxAttendees
               ? parseInt(eventForm.maxAttendees, 10)
-              : undefined
+              : undefined,
+            poster: posterPath
           };
 
       const response = await fetch('/api/events', {
@@ -434,7 +469,9 @@ export default function UserDashboard() {
     } catch (error) {
       toast({
         title: 'Error',
-        description: `Failed to ${editingEvent ? 'update' : 'add'} event`,
+        description: error instanceof Error
+          ? error.message
+          : `Failed to ${editingEvent ? 'update' : 'add'} event`,
         variant: 'destructive'
       });
     } finally {
@@ -447,6 +484,11 @@ export default function UserDashboard() {
     setIsSubmitting(true);
 
     try {
+      let avatarPath = profileForm.avatar;
+      if (avatarFile) {
+        avatarPath = await uploadFile(avatarFile, 'avatar');
+      }
+
       const updateData = {
         firstName: profileForm.firstName,
         lastName: profileForm.lastName,
@@ -459,6 +501,7 @@ export default function UserDashboard() {
         interests: profileForm.interests
           ? profileForm.interests.split(',').map((i) => i.trim())
           : [],
+        avatar: avatarPath,
         links: {
           googleScholar: profileForm.googleScholar,
           researchGate: profileForm.researchGate,
@@ -483,6 +526,7 @@ export default function UserDashboard() {
           description: 'Profile updated successfully'
         });
         setIsEditProfileOpen(false);
+        setAvatarFile(null);
         checkAuth(); // Reload user data
       } else {
         const error = await response.json();
@@ -495,7 +539,7 @@ export default function UserDashboard() {
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to update profile',
+        description: error instanceof Error ? error.message : 'Failed to update profile',
         variant: 'destructive'
       });
     } finally {
@@ -547,8 +591,10 @@ export default function UserDashboard() {
         : '',
       externalUrl: event.externalUrl || '',
       tags: event.tags ? event.tags.join(', ') : '',
+      poster: event.poster || '',
       image: event.image || ''
     });
+    setPosterFile(null);
     setIsAddEventOpen(true);
   };
 
@@ -686,6 +732,7 @@ export default function UserDashboard() {
                     department: user.department || '',
                     phone: user.phone || '',
                     office: user.office || '',
+                    avatar: user.avatar || '',
                     bio: user.bio || '',
                     interests: user.interests ? user.interests.join(', ') : '',
                     googleScholar: user.links?.googleScholar || '',
@@ -694,6 +741,7 @@ export default function UserDashboard() {
                     orcid: user.links?.orcid || '',
                     website: user.links?.website || ''
                   });
+                  setAvatarFile(null);
                   setIsEditProfileOpen(true);
                 }}
                 className="rounded-none"
@@ -1185,6 +1233,7 @@ export default function UserDashboard() {
                       <TableHead>Type</TableHead>
                       <TableHead>Start Date</TableHead>
                       <TableHead>Location</TableHead>
+                      <TableHead>Poster</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="w-[120px]">Actions</TableHead>
                     </TableRow>
@@ -1211,6 +1260,20 @@ export default function UserDashboard() {
                           title={event.location}
                         >
                           {event.location}
+                        </TableCell>
+                        <TableCell>
+                          {event.poster ? (
+                            <a
+                              href={event.poster}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-primary underline"
+                            >
+                              View
+                            </a>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
                         </TableCell>
                         <TableCell>
                           <Badge variant="secondary" className="rounded-none">
@@ -1483,6 +1546,33 @@ export default function UserDashboard() {
                     />
                   </div>
                   <div className="space-y-2">
+                    <Label htmlFor="poster">Poster (PDF or image)</Label>
+                    <Input
+                      id="poster"
+                      type="file"
+                      accept=".pdf,image/*"
+                      onChange={(e) => setPosterFile(e.target.files?.[0] || null)}
+                    />
+                    {posterFile && (
+                      <p className="text-sm text-muted-foreground">
+                        Selected file: {posterFile.name}
+                      </p>
+                    )}
+                    {!posterFile && eventForm.poster && (
+                      <p className="text-sm text-muted-foreground">
+                        Current file:{' '}
+                        <a
+                          href={eventForm.poster}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="underline"
+                        >
+                          View poster
+                        </a>
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="image">Image URL</Label>
                     <Input
                       id="image"
@@ -1595,6 +1685,33 @@ export default function UserDashboard() {
                     required
                   />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="avatar">Profile Picture</Label>
+                <Input
+                  id="avatar"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
+                />
+                {avatarFile && (
+                  <p className="text-sm text-muted-foreground">
+                    Selected file: {avatarFile.name}
+                  </p>
+                )}
+                {!avatarFile && profileForm.avatar && (
+                  <p className="text-sm text-muted-foreground">
+                    Current picture:{' '}
+                    <a
+                      href={profileForm.avatar}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="underline"
+                    >
+                      View
+                    </a>
+                  </p>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
