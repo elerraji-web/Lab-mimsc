@@ -10,12 +10,12 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Mail, Phone, MapPin, Globe, Users, BookOpen, Microscope, Award } from 'lucide-react';
+import { Mail, Phone, MapPin, Globe, Users, BookOpen, Microscope, Award, LogIn } from 'lucide-react';
+import Link from 'next/link';
 import DynamicTeamSection from '@/components/DynamicTeamSection';
 import DynamicPublications from '@/components/DynamicPublications';
 import DynamicEvents from '@/components/DynamicEvents';
 import DynamicFaculty from '@/components/DynamicFaculty';
-import EventCarousel from '@/components/EventCarousel';
 
 export default function Home() {
   const [activeSection, setActiveSection] = useState('home');
@@ -68,15 +68,13 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       {/* Navigation Header - Formal Academic Style */}
       <header className="fixed top-0 w-full bg-card border-b-2 border-primary/10 z-50 shadow-sm">
         <nav className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-primary rounded-none flex items-center justify-center border-2 border-primary">
-                <Microscope className="w-7 h-7 text-primary-foreground" />
-              </div>
+              <img src="/logo.svg" alt="MIMSC Logo" className="w-12 h-12 object-contain rounded-none border-2 border-primary" />
               <div>
                 <h1 className="text-xl font-bold tracking-tight">MIMSC</h1>
                 <p className="text-xs text-muted-foreground uppercase tracking-wider">UCA · EST Essaouira</p>
@@ -104,9 +102,17 @@ export default function Home() {
               </button>
             </div>
 
-            <Button variant="outline" size="sm" className="rounded-none border-2">
-              EN
-            </Button>
+            <div className="flex items-center space-x-3">
+              <Link href="/login">
+                <Button variant="outline" size="sm" className="rounded-none border-2">
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Login
+                </Button>
+              </Link>
+              <Button variant="outline" size="sm" className="rounded-none border-2">
+                EN
+              </Button>
+            </div>
           </div>
         </nav>
       </header>
@@ -114,8 +120,7 @@ export default function Home() {
       {/* Hero Section - Formal Academic Design */}
       <section id="home" className="pt-24 min-h-screen flex items-center bg-card border-b-2 border-primary/10">
         <div className="container mx-auto px-6 py-20">
-          <div className="max-w-5xl mx-auto lg:grid lg:grid-cols-3 lg:gap-8">
-            <div className="lg:col-span-2">
+          <div className="max-w-5xl mx-auto">
             <div className="text-center space-y-8">
               <div className="space-y-4">
                 <Badge variant="secondary" className="rounded-none px-4 py-1.5 text-xs uppercase tracking-wider font-semibold">
@@ -163,12 +168,6 @@ export default function Home() {
                   <div className="text-sm uppercase tracking-wider text-muted-foreground font-medium">Projets</div>
                 </div>
               </div>
-            </div>
-            </div>
-            
-            {/* Event Carousel - Only visible on large screens */}
-            <div className="hidden lg:block lg:col-span-1">
-              <EventCarousel />
             </div>
           </div>
         </div>
@@ -331,7 +330,7 @@ export default function Home() {
           </Tabs>
         </div>
       </section>
-
+      
       {/* Publications Section */}
       <section id="publications" className="py-24 bg-card border-y-2 border-primary/10">
         <div className="container mx-auto px-6">

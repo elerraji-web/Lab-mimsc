@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Publication from '@/lib/models/Publication';
 import User from '@/lib/models/User';
+import { requireAuth } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
@@ -58,21 +59,118 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('POST /api/publications called');
+    const currentUser = await requireAuth(request);
+    console.log('Authenticated user:', currentUser._id);
     await connectDB();
-    
+
     const body = await request.json();
-    
+    console.log('Request body:', body);
+
+    // Add current user to authors if not already present
+    const userFullName = `${currentUser.firstName} ${currentUser.lastName}`;
+    if (!body.authors.includes(userFullName)) {
+      body.authors.push(userFullName);
+    }
+
     const publication = new Publication(body);
+    console.log('Created publication instance, validating...');
+    const validationError = publication.validateSync();
+    if (validationError) {
+      console.error('Validation error:', validationError);
+      return NextResponse.json(
+        { success: false, error: `Validation error: ${validationError.message}` },
+        { status: 400 }
+      );
+    }
     await publication.save();
-    
+
+    console.log('Publication created successfully:', publication);
     return NextResponse.json({
       success: true,
       data: publication
     }, { status: 201 });
   } catch (error) {
     console.error('Error creating publication:', error);
+    const err = error as any;
+    if (err.code === 11000) {
+      // Duplicate key error
+      return NextResponse.json(
+        { success: false, error: 'Publication with this DOI already exists' },
+        { status: 409 }
+      );
+    }
     return NextResponse.json(
-      { success: false, error: 'Failed to create publication' },
+      { success: false, error: err.message || 'Failed to create publication' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    console.log('PUT /api/publications called');
+    await connectDB();
+
+    const body = await request.json();
+    const { id, ...updateData } = body;
+    console.log('Update data:', updateData);
+
+    const publication = await Publication.findByIdAndUpdate(id, updateData, { new: true });
+
+    if (!publication) {
+      return NextResponse.json(
+        { success: false, error: 'Publication not found' },
+        { status: 404 }
+      );
+    }
+
+    console.log('Publication updated successfully:', publication);
+    return NextResponse.json({
+      success: true,
+      data: publication
+    });
+  } catch (error) {
+    console.error('Error updating publication:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to update publication' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    console.log('DELETE /api/publications called');
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: 'Publication ID required' },
+        { status: 400 }
+      );
+    }
+
+    await connectDB();
+    const publication = await Publication.findByIdAndDelete(id);
+
+    if (!publication) {
+      return NextResponse.json(
+        { success: false, error: 'Publication not found' },
+        { status: 404 }
+      );
+    }
+
+    console.log('Publication deleted successfully:', publication);
+    return NextResponse.json({
+      success: true,
+      data: publication
+    });
+  } catch (error) {
+    console.error('Error deleting publication:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to delete publication' },
       { status: 500 }
     );
   }

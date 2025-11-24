@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
+import DOIFetcher from '@/components/DOIFetcher';
 import { 
   Mail, 
   Phone, 
@@ -136,9 +138,10 @@ interface ResearcherData {
 export default function ResearcherProfile() {
   const [researcherData, setResearcherData] = useState<ResearcherData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showDOIFetcher, setShowDOIFetcher] = useState(false);
 
   // Simulate loading data from JSON file
-  useState(() => {
+  useEffect(() => {
     // In a real app, you would fetch this from an API or import the JSON
     import('@/data/researcher.json').then((data) => {
       setResearcherData(data.default);
@@ -146,7 +149,7 @@ export default function ResearcherProfile() {
     }).catch(() => {
       setLoading(false);
     });
-  });
+  }, []);
 
   if (loading) {
     return (
@@ -399,6 +402,19 @@ export default function ResearcherProfile() {
                     </CardContent>
                   </Card>
                 ))}
+              </div>
+
+              <div className="mt-6">
+                <Collapsible open={showDOIFetcher} onOpenChange={setShowDOIFetcher}>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="outline" className="w-full">
+                      Add Publications from DOI
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="mt-4">
+                    <DOIFetcher />
+                  </CollapsibleContent>
+                </Collapsible>
               </div>
             </section>
 

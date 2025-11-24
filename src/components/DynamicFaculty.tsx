@@ -28,7 +28,7 @@ interface DynamicFacultyProps {
   limit?: number;
 }
 
-export default function DynamicFaculty({ limit = 6 }: DynamicFacultyProps) {
+export default function DynamicFaculty({ limit = 15 }: DynamicFacultyProps) {
   const [faculty, setFaculty] = useState<Faculty[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +36,7 @@ export default function DynamicFaculty({ limit = 6 }: DynamicFacultyProps) {
   useEffect(() => {
     const fetchFaculty = async () => {
       try {
-        const response = await fetch(`/api/users?type=FACULTY&isActive=true`);
+        const response = await fetch(`/api/users?type=FACULTY&isActive=true&approvalStatus=APPROVED`);
         if (!response.ok) {
           throw new Error('Failed to fetch faculty');
         }

@@ -1,0 +1,1271 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Users,
+  BookOpen,
+  Calendar,
+  Settings,
+  LogOut,
+  Plus,
+  Edit,
+  Trash2
+} from 'lucide-react';
+
+interface User {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  title?: string;
+  position: string;
+  department?: string;
+  phone?: string;
+  office?: string;
+  avatar?: string;
+  bio?: string;
+  interests?: string[];
+  links?: {
+    googleScholar?: string;
+    researchGate?: string;
+    linkedin?: string;
+    orcid?: string;
+    website?: string;
+  };
+  userType: string;
+}
+
+interface Publication {
+  _id: string;
+  title: string;
+  abstract?: string;
+  type: string;
+  authors: string[];
+  journal?: string;
+  conference?: string;
+  volume?: string;
+  issue?: string;
+  pages?: string;
+  publisher?: string;
+  doi?: string;
+  url?: string;
+  year: number;
+  venue: string;
+  pdfUrl?: string;
+  researchArea: string;
+  tags?: string[];
+  citations?: number;
+}
+
+interface Event {
+  _id: string;
+  title: string;
+  description: string;
+  type: string;
+  startDate: string;
+  endDate: string;
+  location: string;
+  organizer?: string;
+  speakers?: string[];
+  attendees?: string[];
+  maxAttendees?: number;
+  isPublic: boolean;
+  status: string;
+  registrationRequired: boolean;
+  registrationDeadline?: string;
+  externalUrl?: string;
+  tags?: string[];
+  image?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface PublicationFormData {
+  title: string;
+  abstract: string;
+  type: string;
+  authors: string;
+  journal: string;
+  conference: string;
+  volume: string;
+  issue: string;
+  pages: string;
+  publisher: string;
+  doi: string;
+  url: string;
+  year: string;
+  venue: string;
+  pdfUrl: string;
+  researchArea: string;
+  tags: string;
+}
+
+interface EventFormData {
+  title: string;
+  description: string;
+  type: string;
+  startDate: string;
+  endDate: string;
+  location: string;
+  speakers: string[];
+  attendees: string[];
+  maxAttendees: string;
+  isPublic: boolean;
+  status: string;
+  registrationRequired: boolean;
+  registrationDeadline: string;
+  externalUrl: string;
+  tags: string;
+  image: string;
+}
+
+export default function UserDashboard() {
+  const [user, setUser] = useState<User | null>(null);
+  const [publications, setPublications] = useState<Publication[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAddPublicationOpen, setIsAddPublicationOpen] = useState(false);
+  const [isAddEventOpen, setIsAddEventOpen] = useState(false);
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [editingPublication, setEditingPublication] = useState<Publication | null>(null);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [publicationForm, setPublicationForm] = useState<PublicationFormData>({
+    title: '',
+    abstract: '',
+    type: 'JOURNAL_ARTICLE',
+    authors: '',
+    journal: '',
+    conference: '',
+    volume: '',
+    issue: '',
+    pages: '',
+    publisher: '',
+    doi: '',
+    url: '',
+    year: '',
+    venue: '',
+    pdfUrl: '',
+    researchArea: '',
+    tags: ''
+  });
+  const [eventForm, setEventForm] = useState<EventFormData>({
+    title: '',
+    description: '',
+    type: 'CONFERENCE',
+    startDate: '',
+    endDate: '',
+    location: '',
+    speakers: [],
+    attendees: [],
+    maxAttendees: '',
+    isPublic: true,
+    status: 'UPCOMING',
+    registrationRequired: false,
+    registrationDeadline: '',
+    externalUrl: '',
+    tags: '',
+    image: ''
+  });
+  const [profileForm, setProfileForm] = useState({
+    firstName: '',
+    lastName: '',
+    title: '',
+    position: '',
+    department: '',
+    phone: '',
+    office: '',
+    bio: '',
+    interests: '',
+    googleScholar: '',
+    researchGate: '',
+    linkedin: '',
+    orcid: '',
+    website: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    try {
+      const response = await fetch('/api/auth', {
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        router.push('/login');
+        return;
+      }
+
+      const data = await response.json();
+      setUser(data.user);
+      loadUserData(data.user._id);
+    } catch (error) {
+      router.push('/login');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadUserData = async (userId: string) => {
+    try {
+      // Load user's publications (those where user is in authors)
+      const pubsResponse = await fetch(`/api/publications?author=${encodeURIComponent(user?.firstName + ' ' + user?.lastName)}`);
+      if (pubsResponse.ok) {
+        const pubsData = await pubsResponse.json();
+        setPublications(pubsData.data || []);
+      }
+
+      // Load user's events (those organized by user)
+      const eventsResponse = await fetch(`/api/events?organizer=${userId}`);
+      if (eventsResponse.ok) {
+        const eventsData = await eventsResponse.json();
+        setEvents(eventsData.data || []);
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth', { method: 'DELETE', credentials: 'include' });
+      router.push('/login');
+    } catch (error) {
+      router.push('/login');
+    }
+  };
+
+  const resetPublicationForm = () => {
+    setPublicationForm({
+      title: '',
+      abstract: '',
+      type: 'JOURNAL_ARTICLE',
+      authors: '',
+      journal: '',
+      conference: '',
+      volume: '',
+      issue: '',
+      pages: '',
+      publisher: '',
+      doi: '',
+      url: '',
+      year: '',
+      venue: '',
+      pdfUrl: '',
+      researchArea: '',
+      tags: ''
+    });
+    setEditingPublication(null);
+  };
+
+  const resetEventForm = () => {
+    setEventForm({
+      title: '',
+      description: '',
+      type: 'CONFERENCE',
+      startDate: '',
+      endDate: '',
+      location: '',
+      speakers: [],
+      attendees: [],
+      maxAttendees: '',
+      isPublic: true,
+      status: 'UPCOMING',
+      registrationRequired: false,
+      registrationDeadline: '',
+      externalUrl: '',
+      tags: '',
+      image: ''
+    });
+    setEditingEvent(null);
+  };
+
+  const handleAddPublication = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const method = editingPublication ? 'PUT' : 'POST';
+      const body = editingPublication
+        ? {
+            id: editingPublication._id,
+            ...publicationForm,
+            authors: publicationForm.authors.split(',').map(a => a.trim()),
+            tags: publicationForm.tags ? publicationForm.tags.split(',').map(t => t.trim()) : [],
+            year: parseInt(publicationForm.year)
+          }
+        : {
+            ...publicationForm,
+            authors: publicationForm.authors.split(',').map(a => a.trim()),
+            tags: publicationForm.tags ? publicationForm.tags.split(',').map(t => t.trim()) : [],
+            year: parseInt(publicationForm.year)
+          };
+
+      const response = await fetch('/api/publications', {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(body),
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Success',
+          description: `Publication ${editingPublication ? 'updated' : 'added'} successfully`,
+        });
+        setIsAddPublicationOpen(false);
+        resetPublicationForm();
+        if (user) loadUserData(user._id);
+      } else {
+        const error = await response.json();
+        toast({
+          title: 'Error',
+          description: error.error || `Failed to ${editingPublication ? 'update' : 'add'} publication`,
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: `Failed to ${editingPublication ? 'update' : 'add'} publication`,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleAddEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const method = editingEvent ? 'PUT' : 'POST';
+      const body = editingEvent
+        ? {
+            id: editingEvent._id,
+            ...eventForm,
+            tags: eventForm.tags ? eventForm.tags.split(',').map(t => t.trim()) : [],
+            maxAttendees: eventForm.maxAttendees ? parseInt(eventForm.maxAttendees) : undefined
+          }
+        : {
+            ...eventForm,
+            tags: eventForm.tags ? eventForm.tags.split(',').map(t => t.trim()) : [],
+            maxAttendees: eventForm.maxAttendees ? parseInt(eventForm.maxAttendees) : undefined
+          };
+
+      const response = await fetch('/api/events', {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(body),
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Success',
+          description: `Event ${editingEvent ? 'updated' : 'added'} successfully`,
+        });
+        setIsAddEventOpen(false);
+        resetEventForm();
+        if (user) loadUserData(user._id);
+      } else {
+        const error = await response.json();
+        toast({
+          title: 'Error',
+          description: error.error || `Failed to ${editingEvent ? 'update' : 'add'} event`,
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: `Failed to ${editingEvent ? 'update' : 'add'} event`,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEditProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const updateData = {
+        firstName: profileForm.firstName,
+        lastName: profileForm.lastName,
+        title: profileForm.title,
+        position: profileForm.position,
+        department: profileForm.department,
+        phone: profileForm.phone,
+        office: profileForm.office,
+        bio: profileForm.bio,
+        interests: profileForm.interests ? profileForm.interests.split(',').map(i => i.trim()) : [],
+        links: {
+          googleScholar: profileForm.googleScholar,
+          researchGate: profileForm.researchGate,
+          linkedin: profileForm.linkedin,
+          orcid: profileForm.orcid,
+          website: profileForm.website
+        }
+      };
+
+      const response = await fetch('/api/users', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ id: user?._id, ...updateData }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Success',
+          description: 'Profile updated successfully',
+        });
+        setIsEditProfileOpen(false);
+        checkAuth(); // Reload user data
+      } else {
+        const error = await response.json();
+        toast({
+          title: 'Error',
+          description: error.error || 'Failed to update profile',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update profile',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEditPublication = (publication: Publication) => {
+    setEditingPublication(publication);
+    setPublicationForm({
+      title: publication.title,
+      abstract: publication.abstract || '',
+      type: publication.type,
+      authors: publication.authors.join(', '),
+      journal: publication.journal || '',
+      conference: publication.conference || '',
+      volume: publication.volume || '',
+      issue: publication.issue || '',
+      pages: publication.pages || '',
+      publisher: publication.publisher || '',
+      doi: publication.doi || '',
+      url: publication.url || '',
+      year: publication.year.toString(),
+      venue: publication.venue,
+      pdfUrl: publication.pdfUrl || '',
+      researchArea: publication.researchArea,
+      tags: publication.tags ? publication.tags.join(', ') : ''
+    });
+    setIsAddPublicationOpen(true);
+  };
+
+  const handleEditEvent = (event: Event) => {
+    setEditingEvent(event);
+    setEventForm({
+      title: event.title,
+      description: event.description,
+      type: event.type,
+      startDate: event.startDate.split('T')[0],
+      endDate: event.endDate.split('T')[0],
+      location: event.location,
+      speakers: event.speakers || [],
+      attendees: event.attendees || [],
+      maxAttendees: event.maxAttendees ? event.maxAttendees.toString() : '',
+      isPublic: event.isPublic,
+      status: event.status,
+      registrationRequired: event.registrationRequired,
+      registrationDeadline: event.registrationDeadline ? event.registrationDeadline.split('T')[0] : '',
+      externalUrl: event.externalUrl || '',
+      tags: event.tags ? event.tags.join(', ') : '',
+      image: event.image || ''
+    });
+    setIsAddEventOpen(true);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen bg-muted/30">
+      {/* User Header */}
+      <header className="bg-card border-b-2 border-primary/10 shadow-sm">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Avatar className="w-10 h-10">
+                <AvatarImage src={user.avatar} />
+                <AvatarFallback>{user.firstName[0]}{user.lastName[0]}</AvatarFallback>
+              </Avatar>
+              <div>
+                <h1 className="text-xl font-bold tracking-tight">Welcome, {user.firstName} {user.lastName}</h1>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider">{user.position}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-4">
+              <Button variant="outline" size="sm" onClick={() => {
+                setProfileForm({
+                  firstName: user.firstName,
+                  lastName: user.lastName,
+                  title: user.title || '',
+                  position: user.position,
+                  department: user.department || '',
+                  phone: user.phone || '',
+                  office: user.office || '',
+                  bio: user.bio || '',
+                  interests: user.interests ? user.interests.join(', ') : '',
+                  googleScholar: user.links?.googleScholar || '',
+                  researchGate: user.links?.researchGate || '',
+                  linkedin: user.links?.linkedin || '',
+                  orcid: user.links?.orcid || '',
+                  website: user.links?.website || ''
+                });
+                setIsEditProfileOpen(true);
+              }}>
+                <Settings className="w-4 h-4 mr-2" />
+                Edit Profile
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+                className="text-red-600 hover:text-red-700"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="container mx-auto px-6 py-8">
+        {/* Stats Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="rounded-none border-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">My Publications</CardTitle>
+              <BookOpen className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{publications.length}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-none border-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">My Events</CardTitle>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{events.length}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-none border-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Account Type</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <Badge variant="secondary" className="rounded-none">
+                {user.userType}
+              </Badge>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Management Tabs */}
+        <Tabs defaultValue="publications" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 rounded-none border-2 h-12">
+            <TabsTrigger value="publications" className="rounded-none font-medium">
+              My Publications
+            </TabsTrigger>
+            <TabsTrigger value="events" className="rounded-none font-medium">
+              My Events
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="publications" className="mt-6">
+            <Card className="rounded-none border-2">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  Publications Management
+                  <Button onClick={() => { resetPublicationForm(); setIsAddPublicationOpen(true); }} className="rounded-none">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Publication
+                  </Button>
+                  <Dialog open={isAddPublicationOpen} onOpenChange={(open) => { if (!open) resetPublicationForm(); setIsAddPublicationOpen(open); }}>
+                    <DialogContent className="sm:max-w-[700px] rounded-none max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>{editingPublication ? 'Edit Publication' : 'Add New Publication'}</DialogTitle>
+                        <DialogDescription>
+                          {editingPublication ? 'Update publication information.' : 'Create a new publication entry.'}
+                        </DialogDescription>
+                      </DialogHeader>
+                      <form onSubmit={handleAddPublication} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="title">Title *</Label>
+                          <Input
+                            id="title"
+                            value={publicationForm.title}
+                            onChange={(e) => setPublicationForm({ ...publicationForm, title: e.target.value })}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="abstract">Abstract</Label>
+                          <Textarea
+                            id="abstract"
+                            value={publicationForm.abstract}
+                            onChange={(e) => setPublicationForm({ ...publicationForm, abstract: e.target.value })}
+                            rows={3}
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="type">Type *</Label>
+                            <Select value={publicationForm.type} onValueChange={(value) => setPublicationForm({ ...publicationForm, type: value })}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="JOURNAL_ARTICLE">Journal Article</SelectItem>
+                                <SelectItem value="CONFERENCE_PAPER">Conference Paper</SelectItem>
+                                <SelectItem value="BOOK_CHAPTER">Book Chapter</SelectItem>
+                                <SelectItem value="BOOK">Book</SelectItem>
+                                <SelectItem value="THESIS">Thesis</SelectItem>
+                                <SelectItem value="REPORT">Report</SelectItem>
+                                <SelectItem value="PREPRINT">Preprint</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="year">Year *</Label>
+                            <Input
+                              id="year"
+                              type="number"
+                              value={publicationForm.year}
+                              onChange={(e) => setPublicationForm({ ...publicationForm, year: e.target.value })}
+                              required
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="authors">Authors * (comma-separated)</Label>
+                          <Input
+                            id="authors"
+                            value={publicationForm.authors}
+                            onChange={(e) => setPublicationForm({ ...publicationForm, authors: e.target.value })}
+                            placeholder="Author 1, Author 2, Author 3"
+                            required
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="venue">Venue *</Label>
+                            <Input
+                              id="venue"
+                              value={publicationForm.venue}
+                              onChange={(e) => setPublicationForm({ ...publicationForm, venue: e.target.value })}
+                              required
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="researchArea">Research Area *</Label>
+                            <Input
+                              id="researchArea"
+                              value={publicationForm.researchArea}
+                              onChange={(e) => setPublicationForm({ ...publicationForm, researchArea: e.target.value })}
+                              required
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="journal">Journal</Label>
+                            <Input
+                              id="journal"
+                              value={publicationForm.journal}
+                              onChange={(e) => setPublicationForm({ ...publicationForm, journal: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="conference">Conference</Label>
+                            <Input
+                              id="conference"
+                              value={publicationForm.conference}
+                              onChange={(e) => setPublicationForm({ ...publicationForm, conference: e.target.value })}
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="volume">Volume</Label>
+                            <Input
+                              id="volume"
+                              value={publicationForm.volume}
+                              onChange={(e) => setPublicationForm({ ...publicationForm, volume: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="issue">Issue</Label>
+                            <Input
+                              id="issue"
+                              value={publicationForm.issue}
+                              onChange={(e) => setPublicationForm({ ...publicationForm, issue: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="pages">Pages</Label>
+                            <Input
+                              id="pages"
+                              value={publicationForm.pages}
+                              onChange={(e) => setPublicationForm({ ...publicationForm, pages: e.target.value })}
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="publisher">Publisher</Label>
+                            <Input
+                              id="publisher"
+                              value={publicationForm.publisher}
+                              onChange={(e) => setPublicationForm({ ...publicationForm, publisher: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="doi">DOI</Label>
+                            <Input
+                              id="doi"
+                              value={publicationForm.doi}
+                              onChange={(e) => setPublicationForm({ ...publicationForm, doi: e.target.value })}
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="url">URL</Label>
+                            <Input
+                              id="url"
+                              value={publicationForm.url}
+                              onChange={(e) => setPublicationForm({ ...publicationForm, url: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="pdfUrl">PDF URL</Label>
+                            <Input
+                              id="pdfUrl"
+                              value={publicationForm.pdfUrl}
+                              onChange={(e) => setPublicationForm({ ...publicationForm, pdfUrl: e.target.value })}
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="tags">Tags (comma-separated)</Label>
+                          <Input
+                            id="tags"
+                            value={publicationForm.tags}
+                            onChange={(e) => setPublicationForm({ ...publicationForm, tags: e.target.value })}
+                            placeholder="machine learning, AI, research"
+                          />
+                        </div>
+                        <div className="flex justify-end space-x-2">
+                          <Button type="button" variant="outline" onClick={() => setIsAddPublicationOpen(false)} className="rounded-none">
+                            Cancel
+                          </Button>
+                          <Button type="submit" disabled={isSubmitting} className="rounded-none">
+                            {isSubmitting ? (editingPublication ? 'Updating...' : 'Adding...') : (editingPublication ? 'Update Publication' : 'Add Publication')}
+                          </Button>
+                        </div>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                </CardTitle>
+                <CardDescription>Manage your research publications</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Title</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Year</TableHead>
+                        <TableHead>Venue</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {publications.map((publication) => (
+                        <TableRow key={publication._id}>
+                          <TableCell className="max-w-xs truncate" title={publication.title}>{publication.title}</TableCell>
+                          <TableCell>
+                            <Badge variant="secondary" className="rounded-none">
+                              {publication.type.replace('_', ' ')}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{publication.year}</TableCell>
+                          <TableCell className="max-w-xs truncate" title={publication.venue}>{publication.venue}</TableCell>
+                          <TableCell>
+                            <div className="flex space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEditPublication(publication)}
+                                className="rounded-none"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  {publications.length === 0 && (
+                    <p className="text-muted-foreground text-center py-4">No publications found.</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="events" className="mt-6">
+            <Card className="rounded-none border-2">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  Events Management
+                  <Button onClick={() => { resetEventForm(); setIsAddEventOpen(true); }} className="rounded-none">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Event
+                  </Button>
+                  <Dialog open={isAddEventOpen} onOpenChange={(open) => { if (!open) resetEventForm(); setIsAddEventOpen(open); }}>
+                    <DialogContent className="sm:max-w-[700px] rounded-none max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>{editingEvent ? 'Edit Event' : 'Add New Event'}</DialogTitle>
+                        <DialogDescription>
+                          {editingEvent ? 'Update event information.' : 'Create a new event entry.'}
+                        </DialogDescription>
+                      </DialogHeader>
+                      <form onSubmit={handleAddEvent} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="title">Title *</Label>
+                          <Input
+                            id="title"
+                            value={eventForm.title}
+                            onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="description">Description *</Label>
+                          <Textarea
+                            id="description"
+                            value={eventForm.description}
+                            onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })}
+                            rows={3}
+                            required
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="type">Type *</Label>
+                            <Select value={eventForm.type} onValueChange={(value) => setEventForm({ ...eventForm, type: value })}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="CONFERENCE">Conference</SelectItem>
+                                <SelectItem value="SEMINAR">Seminar</SelectItem>
+                                <SelectItem value="WORKSHOP">Workshop</SelectItem>
+                                <SelectItem value="DEFENSE">Defense</SelectItem>
+                                <SelectItem value="MEETING">Meeting</SelectItem>
+                                <SelectItem value="SOCIAL">Social</SelectItem>
+                                <SelectItem value="OTHER">Other</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="status">Status *</Label>
+                            <Select value={eventForm.status} onValueChange={(value) => setEventForm({ ...eventForm, status: value })}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="UPCOMING">Upcoming</SelectItem>
+                                <SelectItem value="ONGOING">Ongoing</SelectItem>
+                                <SelectItem value="COMPLETED">Completed</SelectItem>
+                                <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="startDate">Start Date & Time *</Label>
+                            <Input
+                              id="startDate"
+                              type="datetime-local"
+                              value={eventForm.startDate}
+                              onChange={(e) => setEventForm({ ...eventForm, startDate: e.target.value })}
+                              required
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="endDate">End Date & Time *</Label>
+                            <Input
+                              id="endDate"
+                              type="datetime-local"
+                              value={eventForm.endDate}
+                              onChange={(e) => setEventForm({ ...eventForm, endDate: e.target.value })}
+                              required
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="location">Location *</Label>
+                          <Input
+                            id="location"
+                            value={eventForm.location}
+                            onChange={(e) => setEventForm({ ...eventForm, location: e.target.value })}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="maxAttendees">Max Attendees</Label>
+                          <Input
+                            id="maxAttendees"
+                            type="number"
+                            value={eventForm.maxAttendees}
+                            onChange={(e) => setEventForm({ ...eventForm, maxAttendees: e.target.value })}
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id="isPublic"
+                              checked={eventForm.isPublic}
+                              onChange={(e) => setEventForm({ ...eventForm, isPublic: e.target.checked })}
+                              className="rounded"
+                            />
+                            <Label htmlFor="isPublic">Is Public</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id="registrationRequired"
+                              checked={eventForm.registrationRequired}
+                              onChange={(e) => setEventForm({ ...eventForm, registrationRequired: e.target.checked })}
+                              className="rounded"
+                            />
+                            <Label htmlFor="registrationRequired">Registration Required</Label>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="registrationDeadline">Registration Deadline</Label>
+                          <Input
+                            id="registrationDeadline"
+                            type="datetime-local"
+                            value={eventForm.registrationDeadline}
+                            onChange={(e) => setEventForm({ ...eventForm, registrationDeadline: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="externalUrl">External URL</Label>
+                          <Input
+                            id="externalUrl"
+                            value={eventForm.externalUrl}
+                            onChange={(e) => setEventForm({ ...eventForm, externalUrl: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="tags">Tags (comma-separated)</Label>
+                          <Input
+                            id="tags"
+                            value={eventForm.tags}
+                            onChange={(e) => setEventForm({ ...eventForm, tags: e.target.value })}
+                            placeholder="tag1, tag2, tag3"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="image">Image URL</Label>
+                          <Input
+                            id="image"
+                            value={eventForm.image}
+                            onChange={(e) => setEventForm({ ...eventForm, image: e.target.value })}
+                          />
+                        </div>
+                        <div className="flex justify-end space-x-2">
+                          <Button type="button" variant="outline" onClick={() => setIsAddEventOpen(false)} className="rounded-none">
+                            Cancel
+                          </Button>
+                          <Button type="submit" disabled={isSubmitting} className="rounded-none">
+                            {isSubmitting ? (editingEvent ? 'Updating...' : 'Adding...') : (editingEvent ? 'Update Event' : 'Add Event')}
+                          </Button>
+                        </div>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                </CardTitle>
+                <CardDescription>Manage events you organize</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Start Date</TableHead>
+                      <TableHead>Location</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {events.map((event) => (
+                      <TableRow key={event._id}>
+                        <TableCell className="max-w-xs truncate" title={event.title}>{event.title}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="rounded-none">
+                            {event.type}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{new Date(event.startDate).toLocaleDateString()}</TableCell>
+                        <TableCell className="max-w-xs truncate" title={event.location}>{event.location}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="rounded-none">
+                            {event.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditEvent(event)}
+                              className="rounded-none"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                {events.length === 0 && (
+                  <p className="text-muted-foreground text-center py-4">No events found.</p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {/* Edit Profile Dialog */}
+        <Dialog open={isEditProfileOpen} onOpenChange={setIsEditProfileOpen}>
+          <DialogContent className="sm:max-w-[600px] rounded-none max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Profile</DialogTitle>
+              <DialogDescription>
+                Update your profile information.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleEditProfile} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">First Name *</Label>
+                  <Input
+                    id="firstName"
+                    value={profileForm.firstName}
+                    onChange={(e) => setProfileForm({ ...profileForm, firstName: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name *</Label>
+                  <Input
+                    id="lastName"
+                    value={profileForm.lastName}
+                    onChange={(e) => setProfileForm({ ...profileForm, lastName: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Title</Label>
+                  <Input
+                    id="title"
+                    value={profileForm.title}
+                    onChange={(e) => setProfileForm({ ...profileForm, title: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="position">Position *</Label>
+                  <Input
+                    id="position"
+                    value={profileForm.position}
+                    onChange={(e) => setProfileForm({ ...profileForm, position: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="department">Department</Label>
+                  <Input
+                    id="department"
+                    value={profileForm.department}
+                    onChange={(e) => setProfileForm({ ...profileForm, department: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input
+                    id="phone"
+                    value={profileForm.phone}
+                    onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="office">Office</Label>
+                <Input
+                  id="office"
+                  value={profileForm.office}
+                  onChange={(e) => setProfileForm({ ...profileForm, office: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="bio">Bio</Label>
+                <Textarea
+                  id="bio"
+                  value={profileForm.bio}
+                  onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
+                  rows={3}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="interests">Interests (comma-separated)</Label>
+                <Input
+                  id="interests"
+                  value={profileForm.interests}
+                  onChange={(e) => setProfileForm({ ...profileForm, interests: e.target.value })}
+                  placeholder="Machine Learning, AI, Research"
+                />
+              </div>
+              <div className="space-y-4">
+                <Label>Links</Label>
+                <div className="grid grid-cols-1 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="googleScholar" className="text-sm">Google Scholar</Label>
+                    <Input
+                      id="googleScholar"
+                      value={profileForm.googleScholar}
+                      onChange={(e) => setProfileForm({ ...profileForm, googleScholar: e.target.value })}
+                      placeholder="https://scholar.google.com/..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="researchGate" className="text-sm">ResearchGate</Label>
+                    <Input
+                      id="researchGate"
+                      value={profileForm.researchGate}
+                      onChange={(e) => setProfileForm({ ...profileForm, researchGate: e.target.value })}
+                      placeholder="https://researchgate.net/..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="linkedin" className="text-sm">LinkedIn</Label>
+                    <Input
+                      id="linkedin"
+                      value={profileForm.linkedin}
+                      onChange={(e) => setProfileForm({ ...profileForm, linkedin: e.target.value })}
+                      placeholder="https://linkedin.com/in/..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="orcid" className="text-sm">ORCID</Label>
+                    <Input
+                      id="orcid"
+                      value={profileForm.orcid}
+                      onChange={(e) => setProfileForm({ ...profileForm, orcid: e.target.value })}
+                      placeholder="https://orcid.org/..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="website" className="text-sm">Website</Label>
+                    <Input
+                      id="website"
+                      value={profileForm.website}
+                      onChange={(e) => setProfileForm({ ...profileForm, website: e.target.value })}
+                      placeholder="https://yourwebsite.com"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setIsEditProfileOpen(false)} className="rounded-none">
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting} className="rounded-none">
+                  {isSubmitting ? 'Updating...' : 'Update Profile'}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </main>
+    </div>
+  );
+}

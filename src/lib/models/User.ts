@@ -18,6 +18,11 @@ const userSchema = new mongoose.Schema({
     trim: true,
     lowercase: true
   },
+  password: {
+    type: String,
+    required: true,
+    trim: true
+  },
   title: {
     type: String,
     trim: true
@@ -68,6 +73,15 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  approvalStatus: {
+    type: String,
+    enum: ['PENDING', 'APPROVED', 'REJECTED'],
+    default: 'PENDING'
+  },
+  order: {
+    type: Number,
+    default: 9999
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -79,7 +93,7 @@ const userSchema = new mongoose.Schema({
 });
 
 userSchema.pre('save', function(next) {
-  this.updatedAt = Date.now();
+  this.updatedAt = new Date();
   next();
 });
 

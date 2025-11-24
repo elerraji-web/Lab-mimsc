@@ -37,7 +37,7 @@ const studentSchema = new mongoose.Schema({
   supervisor: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: false
   },
   coSupervisors: [{
     type: mongoose.Schema.Types.ObjectId,
@@ -58,7 +58,7 @@ const studentSchema = new mongoose.Schema({
   },
   expectedEndDate: {
     type: Date,
-    required: true
+    required: false
   },
   actualEndDate: {
     type: Date
@@ -100,7 +100,7 @@ const studentSchema = new mongoose.Schema({
 });
 
 studentSchema.pre('save', function(next) {
-  this.updatedAt = Date.now();
+  this.updatedAt = new Date();
   next();
 });
 

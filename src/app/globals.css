@@ -51,22 +51,22 @@
   --background: oklch(0.97 0.005 60); /* Warm white background */
   --foreground: oklch(0.20 0.02 20); /* Deep brown-black text */
   
-  --card: oklch(1 0 0); /* Pure white cards */
+  --card: oklch(1 0 0 / 0.85); /* Semi-transparent white cards */
   --card-foreground: oklch(0.20 0.02 20);
-  
-  --popover: oklch(1 0 0);
+
+  --popover: oklch(1 0 0 / 0.85);
   --popover-foreground: oklch(0.20 0.02 20);
-  
+
   /* Primary: Rich Burgundy/Maroon (classic academic) */
   --primary: oklch(0.40 0.15 15); /* Deep burgundy */
   --primary-foreground: oklch(0.98 0 0);
-  
+
   /* Secondary: Warm gray with gold tint */
   --secondary: oklch(0.93 0.01 60);
   --secondary-foreground: oklch(0.20 0.02 20);
-  
+
   /* Muted: Soft beige/cream for backgrounds */
-  --muted: oklch(0.95 0.01 60);
+  --muted: oklch(0.95 0.01 60 / 0.85);
   --muted-foreground: oklch(0.48 0.02 20);
   
   /* Accent: Academic gold */
@@ -103,20 +103,20 @@
   --background: oklch(0.15 0.02 240); /* Deep navy background */
   --foreground: oklch(0.92 0.01 60); /* Soft cream text */
   
-  --card: oklch(0.20 0.02 240); /* Slightly lighter navy for cards */
+  --card: oklch(0.20 0.02 240 / 0.85); /* Semi-transparent navy for cards */
   --card-foreground: oklch(0.92 0.01 60);
-  
-  --popover: oklch(0.20 0.02 240);
+
+  --popover: oklch(0.20 0.02 240 / 0.85);
   --popover-foreground: oklch(0.92 0.01 60);
-  
+
   /* Primary: Light academic blue */
   --primary: oklch(0.65 0.12 220);
   --primary-foreground: oklch(0.15 0.02 240);
-  
+
   --secondary: oklch(0.25 0.02 240);
   --secondary-foreground: oklch(0.92 0.01 60);
-  
-  --muted: oklch(0.22 0.02 240);
+
+  --muted: oklch(0.22 0.02 240 / 0.85);
   --muted-foreground: oklch(0.65 0.01 240);
   
   --accent: oklch(0.65 0.08 350);
@@ -149,7 +149,12 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground font-serif;
+    @apply text-foreground font-serif;
+    background-image: url('/fond.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
   }
   
   /* Academic typography - serif for body, sans for headings */

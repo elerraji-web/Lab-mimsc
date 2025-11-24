@@ -22,7 +22,9 @@ async function connectDB() {
       bufferCommands: false,
     };
 
+    console.log('DEBUG: Connecting to MongoDB with URI:', MONGODB_URI);
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
+      console.log('DEBUG: MongoDB connected successfully');
       return mongoose;
     });
   }

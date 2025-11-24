@@ -19,6 +19,44 @@ export async function POST(request: NextRequest) {
     
     // Create faculty users
     const faculty1 = await User.create({
+      firstName: 'Fahd',
+      lastName: 'Karami',
+      email: 'fahd.karami@este.uca.ma',
+      title: 'Dr.',
+      position: 'Professeur',
+      department: 'Informatique',
+      phone: '+212 524 78 90 10',
+      office: 'Bâtiment A, Bureau 101',
+      bio: 'Expert in computer science and software engineering.',
+      interests: ['Computer Science', 'Software Engineering', 'Algorithms'],
+      userType: 'FACULTY',
+      order: 1,
+      links: {
+        googleScholar: 'https://scholar.google.com/citations?user=fahd',
+        researchGate: 'https://www.researchgate.net/profile/fahd'
+      }
+    });
+
+    const faculty2 = await User.create({
+      firstName: 'Driss',
+      lastName: 'Meskine',
+      email: 'driss.meskine@este.uca.ma',
+      title: 'Dr.',
+      position: 'Professeur',
+      department: 'Informatique',
+      phone: '+212 524 78 90 11',
+      office: 'Bâtiment A, Bureau 102',
+      bio: 'Expert in computer science and data science.',
+      interests: ['Computer Science', 'Data Science', 'Machine Learning'],
+      userType: 'FACULTY',
+      order: 2,
+      links: {
+        googleScholar: 'https://scholar.google.com/citations?user=driss',
+        researchGate: 'https://www.researchgate.net/profile/driss'
+      }
+    });
+
+    const faculty3 = await User.create({
       firstName: 'Ahmed',
       lastName: 'Mohammed',
       email: 'ahmed.mohammed@este.uca.ma',
@@ -30,13 +68,14 @@ export async function POST(request: NextRequest) {
       bio: 'Expert en intelligence artificielle et apprentissage automatique.',
       interests: ['Intelligence Artificielle', 'Machine Learning', 'Deep Learning'],
       userType: 'FACULTY',
+      order: 3,
       links: {
         googleScholar: 'https://scholar.google.com/citations?user=example',
         researchGate: 'https://www.researchgate.net/profile/example'
       }
     });
 
-    const faculty2 = await User.create({
+    const faculty4 = await User.create({
       firstName: 'Fatima',
       lastName: 'Zahra',
       email: 'fatima.zahra@este.uca.ma',
@@ -48,13 +87,14 @@ export async function POST(request: NextRequest) {
       bio: 'Spécialiste en traitement du signal et analyse d\'images.',
       interests: ['Traitement du Signal', 'Vision par Ordinateur', 'Multimédia'],
       userType: 'FACULTY',
+      order: 4,
       links: {
         googleScholar: 'https://scholar.google.com/citations?user=fatima-example',
         researchGate: 'https://www.researchgate.net/profile/fatima-example'
       }
     });
 
-    const faculty3 = await User.create({
+    const faculty5 = await User.create({
       firstName: 'Karim',
       lastName: 'Omar',
       email: 'karim.omar@este.uca.ma',
@@ -65,7 +105,8 @@ export async function POST(request: NextRequest) {
       office: 'Bâtiment A, Bureau 303',
       bio: 'Expert en modélisation mathématique et optimisation.',
       interests: ['Mathématiques', 'Optimisation', 'Modélisation'],
-      userType: 'FACULTY'
+      userType: 'FACULTY',
+      order: 5
     });
 
     await Research.create([
@@ -74,42 +115,42 @@ export async function POST(request: NextRequest) {
         subtitle: 'Machine Learning & Deep Learning',
         description: 'Développement d\'algorithmes avancés pour l\'apprentissage automatique et l\'analyse de données complexes.',
         tags: ['ML', 'DL', 'NLP'],
-        lead: faculty1._id
+        lead: faculty3._id
       },
       {
         title: 'Traitement du Multimédia',
         subtitle: 'Image, Audio & Vidéo',
         description: 'Analyse et traitement avancé du contenu multimédia pour diverses applications industrielles.',
         tags: ['CV', 'Audio', 'VR'],
-        lead: faculty2._id
+        lead: faculty4._id
       },
       {
         title: 'Modélisation Mathématique',
         subtitle: 'Simulation & Optimisation',
         description: 'Modélisation mathématique de systèmes complexes et optimisation pour la prise de décision.',
         tags: ['Math', 'Optimisation', 'Simulation'],
-        lead: faculty3._id
+        lead: faculty5._id
       },
       {
         title: 'Big Data Analytics',
         subtitle: 'Data Mining & Visualisation',
         description: 'Extraction de connaissances à partir de grandes masses de données et visualisation interactive.',
         tags: ['Data Mining', 'Analytics', 'Viz'],
-        lead: faculty1._id
+        lead: faculty3._id
       },
       {
         title: 'IoT & Systèmes Intelligents',
         subtitle: 'Capteurs & Automatisation',
         description: 'Développement de systèmes intelligents connectés pour l\'industrie et les smart cities.',
         tags: ['IoT', 'Smart Systems', 'Sensors'],
-        lead: faculty3._id
+        lead: faculty5._id
       },
       {
         title: 'Sécurité Informatique',
         subtitle: 'Cryptographie & Privacy',
         description: 'Recherche en sécurité des systèmes d\'information et protection des données personnelles.',
         tags: ['Security', 'Crypto', 'Privacy'],
-        lead: faculty2._id
+        lead: faculty4._id
       }
     ]);
 
@@ -121,8 +162,8 @@ export async function POST(request: NextRequest) {
       studentType: 'PHD',
       program: 'Doctorat Informatique',
       specialization: 'Intelligence Artificielle',
-      supervisor: faculty1._id,
-      coSupervisors: [faculty2._id],
+      supervisor: faculty3._id,
+      coSupervisors: [faculty4._id],
       thesisTitle: 'Deep Learning pour l\'analyse d\'images médicales',
       researchArea: 'Deep Learning et Vision par Ordinateur',
       startDate: new Date('2021-10-01'),
@@ -139,8 +180,8 @@ export async function POST(request: NextRequest) {
       studentType: 'PHD',
       program: 'Doctorat Informatique',
       specialization: 'Traitement du Langage Naturel',
-      supervisor: faculty2._id,
-      coSupervisors: [faculty1._id],
+      supervisor: faculty4._id,
+      coSupervisors: [faculty3._id],
       thesisTitle: 'Traitement du langage naturel pour l\'arabe',
       researchArea: 'NLP et Traitement du Langage',
       startDate: new Date('2022-10-01'),
@@ -157,7 +198,7 @@ export async function POST(request: NextRequest) {
       studentType: 'PHD',
       program: 'Doctorat Informatique',
       specialization: 'IoT',
-      supervisor: faculty3._id,
+      supervisor: faculty5._id,
       thesisTitle: 'IoT et systèmes intelligents',
       researchArea: 'Internet des Objets et Systèmes Intelligents',
       startDate: new Date('2023-10-01'),
@@ -174,7 +215,7 @@ export async function POST(request: NextRequest) {
       studentType: 'PHD',
       program: 'Doctorat Informatique',
       specialization: 'Vision par Ordinateur',
-      supervisor: faculty2._id,
+      supervisor: faculty4._id,
       thesisTitle: 'Vision par ordinateur pour l\'analyse d\'images médicales',
       researchArea: 'Computer Vision et Medical Imaging',
       startDate: new Date('2022-10-01'),
@@ -192,7 +233,7 @@ export async function POST(request: NextRequest) {
       studentType: 'MASTER',
       program: 'Master Informatique',
       specialization: 'Data Science',
-      supervisor: faculty1._id,
+      supervisor: faculty3._id,
       thesisTitle: 'Sécurité des systèmes IoT',
       researchArea: 'Cybersécurité et IoT',
       startDate: new Date('2023-10-01'),
@@ -209,7 +250,7 @@ export async function POST(request: NextRequest) {
       studentType: 'MASTER',
       program: 'Master Informatique',
       specialization: 'Cybersécurité',
-      supervisor: faculty3._id,
+      supervisor: faculty5._id,
       thesisTitle: 'Sécurité informatique et cryptographie',
       researchArea: 'Cybersécurité et Cryptographie',
       startDate: new Date('2023-10-01'),
@@ -226,7 +267,7 @@ export async function POST(request: NextRequest) {
       studentType: 'MASTER',
       program: 'Master Informatique',
       specialization: 'Intelligence Artificielle',
-      supervisor: faculty1._id,
+      supervisor: faculty3._id,
       researchArea: 'Intelligence Artificielle',
       startDate: new Date('2023-10-01'),
       expectedEndDate: new Date('2024-10-01'),
@@ -242,7 +283,7 @@ export async function POST(request: NextRequest) {
       studentType: 'MASTER',
       program: 'Master Informatique',
       specialization: 'Multimédia',
-      supervisor: faculty2._id,
+      supervisor: faculty4._id,
       researchArea: 'Multimédia et Web',
       startDate: new Date('2023-10-01'),
       expectedEndDate: new Date('2024-10-01'),
@@ -256,7 +297,7 @@ export async function POST(request: NextRequest) {
       title: 'Deep Learning Approaches for Medical Image Analysis: A Comprehensive Survey',
       abstract: 'This paper presents a comprehensive survey of deep learning approaches for medical image analysis...',
       type: 'JOURNAL_ARTICLE',
-      authors: [faculty1._id, faculty2._id, faculty3._id],
+      authors: [faculty3._id, faculty4._id, faculty5._id],
       journal: 'IEEE Transactions on Medical Imaging',
       volume: '43',
       issue: '2',
@@ -272,7 +313,7 @@ export async function POST(request: NextRequest) {
       title: 'Real-time Object Detection in Smart Cities using IoT and Edge Computing',
       abstract: 'This paper proposes a novel approach for real-time object detection in smart cities...',
       type: 'JOURNAL_ARTICLE',
-      authors: [faculty3._id, faculty1._id, phd1._id],
+      authors: [faculty5._id, faculty3._id, phd1._id],
       journal: 'Journal of Network and Computer Applications',
       volume: '205',
       pages: '103456',
@@ -287,7 +328,7 @@ export async function POST(request: NextRequest) {
       title: 'Natural Language Processing for Arabic Sentiment Analysis: Challenges and Solutions',
       abstract: 'This paper explores the challenges and solutions for Arabic sentiment analysis...',
       type: 'CONFERENCE_PAPER',
-      authors: [faculty2._id, phd2._id, phd4._id],
+      authors: [faculty4._id, phd2._id, phd4._id],
       conference: 'International Conference on Arabic Language Processing',
       pages: '123-135',
       publishedAt: new Date('2023-09-10'),
@@ -300,7 +341,7 @@ export async function POST(request: NextRequest) {
       title: 'Mathematical Modeling of Epidemic Spread using Machine Learning Techniques',
       abstract: 'This study presents a mathematical model for epidemic spread prediction using machine learning...',
       type: 'JOURNAL_ARTICLE',
-      authors: [faculty1._id, faculty3._id, phd3._id],
+      authors: [faculty3._id, faculty5._id, phd3._id],
       journal: 'Mathematical Biosciences and Engineering',
       volume: '19',
       issue: '8',
@@ -320,8 +361,8 @@ export async function POST(request: NextRequest) {
       startDate: new Date('2024-12-15T14:00:00'),
       endDate: new Date('2024-12-15T16:00:00'),
       location: 'Amphithéâtre A, ESTE Essaouira',
-      organizer: faculty1._id,
-      speakers: [faculty1._id, faculty2._id],
+      organizer: faculty3._id,
+      speakers: [faculty3._id, faculty4._id],
       maxAttendees: 100,
       isPublic: true,
       status: 'UPCOMING',
@@ -337,8 +378,8 @@ export async function POST(request: NextRequest) {
       startDate: new Date('2024-11-20T09:00:00'),
       endDate: new Date('2024-11-20T17:00:00'),
       location: 'Laboratoire Informatique, ESTE Essaouira',
-      organizer: faculty2._id,
-      speakers: [faculty2._id, phd4._id],
+      organizer: faculty4._id,
+      speakers: [faculty4._id, phd4._id],
       maxAttendees: 30,
       isPublic: true,
       status: 'UPCOMING',
@@ -354,7 +395,7 @@ export async function POST(request: NextRequest) {
       startDate: new Date('2024-10-25T10:00:00'),
       endDate: new Date('2024-10-25T12:00:00'),
       location: 'Salle des thèses, ESTE Essaouira',
-      organizer: faculty1._id,
+      organizer: faculty3._id,
       speakers: [phd1._id],
       maxAttendees: 50,
       isPublic: true,
@@ -370,8 +411,8 @@ export async function POST(request: NextRequest) {
       startDate: new Date('2024-09-10T15:00:00'),
       endDate: new Date('2024-09-10T17:00:00'),
       location: 'Amphithéâtre B, ESTE Essaouira',
-      organizer: faculty3._id,
-      speakers: [faculty3._id, phd3._id],
+      organizer: faculty5._id,
+      speakers: [faculty5._id, phd3._id],
       maxAttendees: 150,
       isPublic: true,
       status: 'UPCOMING',
@@ -387,8 +428,8 @@ export async function POST(request: NextRequest) {
       startDate: new Date('2024-08-20T10:00:00'),
       endDate: new Date('2024-08-20T18:00:00'),
       location: 'Laboratoire MIMSC, ESTE Essaouira',
-      organizer: faculty1._id,
-      speakers: [faculty1._id, faculty2._id, faculty3._id],
+      organizer: faculty3._id,
+      speakers: [faculty3._id, faculty4._id, faculty5._id],
       maxAttendees: 200,
       isPublic: true,
       status: 'UPCOMING',

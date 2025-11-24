@@ -3,7 +3,6 @@ import mongoose from 'mongoose';
 const publicationSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: true,
     trim: true
   },
   abstract: {
@@ -12,13 +11,11 @@ const publicationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    required: true,
     enum: ['JOURNAL_ARTICLE', 'CONFERENCE_PAPER', 'BOOK_CHAPTER', 'BOOK', 'THESIS', 'REPORT', 'PREPRINT'],
     default: 'JOURNAL_ARTICLE'
   },
   authors: [{
     type: String,
-    required: true,
     trim: true
   }],
   journal: {
@@ -47,21 +44,19 @@ const publicationSchema = new mongoose.Schema({
   },
   doi: {
     type: String,
+    required: true,
     trim: true,
-    unique: true,
-    sparse: true
+    unique: true
   },
   url: {
     type: String,
     trim: true
   },
   year: {
-    type: Number,
-    required: true
+    type: Number
   },
   venue: {
     type: String,
-    required: true,
     trim: true
   },
   pdfUrl: {
@@ -77,7 +72,6 @@ const publicationSchema = new mongoose.Schema({
   },
   researchArea: {
     type: String,
-    required: true,
     trim: true
   },
   tags: [{
