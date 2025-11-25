@@ -111,22 +111,44 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     console.log('PUT /api/users called');
-    const currentUser = await requireAuth(request);
+    const body = await request.json();
+    const { id, ...updateData } = body;
+    const needsAdmin = !!updateData.role;
+
+    const currentUser = needsAdmin ? await requireAdmin(request) : await requireAuth(request);
     console.log('Authenticated user:', currentUser._id);
     await connectDB();
 
-    const body = await request.json();
-    const { id, ...updateData } = body;
     console.log('Update target id:', id);
     console.log('Update data:', updateData);
 
-    const isAdminUser = await isAdmin(request);
+    const isAdminUser = needsAdmin ? true : await isAdmin(request);
     // Users can only edit their own profile unless they are admin
     if (!isAdminUser && id !== currentUser._id) {
       return NextResponse.json(
         { success: false, error: 'You can only edit your own profile' },
         { status: 403 }
       );
+    }
+
+    // Only admins can change email; normalize to lowercase for uniqueness
+    if (updateData.email) {
+      if (!isAdminUser) {
+        console.log('Non-admin attempted email change, ignoring');
+        delete updateData.email;
+      } else {
+        updateData.email = updateData.email.toLowerCase();
+      }
+    }
+
+    // Only admins can change role; allow promoting to ADMIN
+    if (updateData.role) {
+      if (!isAdminUser) {
+        console.log('Non-admin attempted role change, ignoring');
+        delete updateData.role;
+      } else {
+        updateData.role = updateData.role.toUpperCase();
+      }
     }
 
     const user = await User.findByIdAndUpdate(id, updateData, { new: true });
@@ -149,6 +171,12 @@ export async function PUT(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error updating user:', error);
+    if (error instanceof Error && /E11000 duplicate key error/.test(error.message)) {
+      return NextResponse.json(
+        { success: false, error: 'Email already in use' },
+        { status: 409 }
+      );
+    }
     if (error instanceof Error && error.message === 'Forbidden') {
       return NextResponse.json(
         { success: false, error: error.message },
@@ -180,6 +208,13 @@ export async function DELETE(request: NextRequest) {
     if (!id) {
       return NextResponse.json(
         { success: false, error: 'User ID required' },
+        { status: 400 }
+      );
+    }
+
+    if (id === currentUser._id) {
+      return NextResponse.json(
+        { success: false, error: 'Admins cannot delete their own account' },
         { status: 400 }
       );
     }

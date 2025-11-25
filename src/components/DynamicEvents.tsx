@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar, MapPin, Users, ExternalLink } from 'lucide-react';
+import { normalizeAssetPath } from '@/lib/assetPaths';
 
 interface Event {
   _id: string;
@@ -34,18 +35,21 @@ interface Event {
   externalUrl?: string;
   tags: string[];
   image?: string;
+  poster?: string;
 }
 
 interface DynamicEventsProps {
   limit?: number;
   showHeader?: boolean;
   upcomingOnly?: boolean;
+  mode?: 'hover' | 'background';
 }
 
-export default function DynamicEvents({ limit = 3, showHeader = true, upcomingOnly = true }: DynamicEventsProps) {
+export default function DynamicEvents({ limit = 3, showHeader = true, upcomingOnly = true, mode = 'hover' }: DynamicEventsProps) {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -54,7 +58,7 @@ export default function DynamicEvents({ limit = 3, showHeader = true, upcomingOn
           limit: limit.toString(),
           ...(upcomingOnly && { upcoming: 'true' })
         });
-        
+
         const response = await fetch(`/api/events?${params}`);
         if (!response.ok) {
           throw new Error('Failed to fetch events');
@@ -143,84 +147,130 @@ export default function DynamicEvents({ limit = 3, showHeader = true, upcomingOn
       {showHeader && (
         <div className="text-center space-y-4">
           <Badge variant="secondary">Événements</Badge>
-          <h2 className="text-3xl md:text-4xl font-bold">Événements à Venir</h2>
+          <h2 className="text-3xl md:text-4xl font-bold">Événements à venir</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Découvrez nos prochains événements, séminaires et activités scientifiques
           </p>
         </div>
       )}
-      
+
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {events.map((event) => (
-          <Card key={event._id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex items-start justify-between mb-2">
-                <Badge variant="outline" className="text-xs">
-                  {getTypeLabel(event.type)}
-                </Badge>
-                {getStatusBadge(event.status)}
-              </div>
-              <CardTitle className="text-lg leading-tight">{event.title}</CardTitle>
-              <CardDescription className="line-clamp-2">
-                {event.description}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Calendar className="w-4 h-4" />
-                  <span>{formatDate(event.startDate)}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <MapPin className="w-4 h-4" />
-                  <span>{event.location}</span>
-                </div>
-                {event.organizer && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Users className="w-4 h-4" />
-                    <span>Organisé par {event.organizer.firstName} {event.organizer.lastName}</span>
+        {events.map((event) => {
+          const isExpanded = expandedId === event._id;
+          const cardClasses = mode === 'hover'
+            ? 'hover:shadow-lg transition-all cursor-pointer'
+            : 'relative overflow-hidden border-2 border-primary/10 bg-background';
+
+          const imageUrl = normalizeAssetPath(event.image);
+          const posterUrl = normalizeAssetPath(event.poster);
+
+          return (
+            <Card
+              key={event._id}
+              className={cardClasses}
+              onClick={mode === 'hover' ? () => setExpandedId(isExpanded ? null : event._id) : undefined}
+              onMouseEnter={mode === 'hover' ? () => setExpandedId(event._id) : undefined}
+              onMouseLeave={mode === 'hover' ? () => setExpandedId(null) : undefined}
+            >
+              {mode === 'background' && imageUrl && (
+                <div
+                  className="absolute inset-0 bg-cover bg-center opacity-25"
+                  style={{ backgroundImage: `url(${imageUrl})` }}
+                  aria-hidden="true"
+                />
+              )}
+              <div className={mode === 'background' ? 'relative' : ''}>
+                <CardHeader>
+                  <div className="flex items-start justify-between mb-2">
+                    <Badge variant="outline" className="text-xs">
+                      {getTypeLabel(event.type)}
+                    </Badge>
+                    {getStatusBadge(event.status)}
                   </div>
-                )}
-              </div>
-              
-              {event.speakers && event.speakers.length > 0 && (
-                <div>
-                  <p className="text-sm font-medium mb-1">Intervenants:</p>
-                  <div className="text-sm text-muted-foreground">
-                    {event.speakers.map((speaker, index) => (
-                      <span key={index}>
-                        {speaker.firstName} {speaker.lastName}
-                        {index < event.speakers!.length - 1 ? ', ' : ''}
-                      </span>
+                  <CardTitle className="text-lg leading-tight">{event.title}</CardTitle>
+                  <CardDescription className={mode === 'hover' && !isExpanded ? 'line-clamp-2' : ''}>
+                    {event.description}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Calendar className="w-4 h-4" />
+                      <span>{formatDate(event.startDate)}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <MapPin className="w-4 h-4" />
+                      <span>{event.location}</span>
+                    </div>
+                    {event.organizer && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Users className="w-4 h-4" />
+                        <span>Organisé par {event.organizer.firstName} {event.organizer.lastName}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {event.speakers && event.speakers.length > 0 && (
+                    <div>
+                      <p className="text-sm font-medium mb-1">Intervenants:</p>
+                      <div className="text-sm text-muted-foreground">
+                        {event.speakers.map((speaker, index) => (
+                          <span key={index}>
+                            {speaker.firstName} {speaker.lastName}
+                            {index < event.speakers!.length - 1 ? ', ' : ''}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap gap-1">
+                    {event.tags.slice(0, 3).map((tag, index) => (
+                      <Badge key={index} variant="secondary" className="text-xs">
+                        {tag}
+                      </Badge>
                     ))}
                   </div>
-                </div>
-              )}
-              
-              <div className="flex flex-wrap gap-1">
-                {event.tags.slice(0, 3).map((tag, index) => (
-                  <Badge key={index} variant="secondary" className="text-xs">
-                    {tag}
-                  </Badge>
-                ))}
+
+                  {mode === 'hover' && isExpanded && imageUrl && (
+                    <div className="overflow-hidden rounded-md border border-muted">
+                      <img
+                        src={imageUrl}
+                        alt={event.title}
+                        className="w-full h-48 object-cover"
+                      />
+                    </div>
+                  )}
+
+                  {posterUrl && (
+                    <Button
+                      asChild
+                      variant={mode === 'background' ? 'secondary' : 'outline'}
+                      size="sm"
+                      className="w-full"
+                    >
+                      <a href={posterUrl} target="_blank" rel="noreferrer">
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Voir le PDF
+                      </a>
+                    </Button>
+                  )}
+
+                  {event.externalUrl && (
+                    <Button asChild variant="outline" size="sm" className="w-full">
+                      <a href={event.externalUrl} target="_blank" rel="noreferrer">
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Plus d'informations
+                      </a>
+                    </Button>
+                  )}
+                </CardContent>
               </div>
-              
-              {event.externalUrl && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => window.open(event.externalUrl, '_blank')}
-                >
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Plus d'informations
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        ))}
+            </Card>
+          );
+        })}
       </div>
-      
+
       {showHeader && (
         <div className="text-center">
           <Button variant="outline">

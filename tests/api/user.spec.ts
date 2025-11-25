@@ -5,7 +5,10 @@ import { loginAsUser, loginAsTestAdmin } from '../global-setup';
 import { GET as getUsers, POST as createUser, PUT as updateUser, DELETE as deleteUser } from '@/app/api/users/route';
 import { POST as login } from '@/app/api/auth/route';
 import { POST as createPublication, PUT as updatePublication, DELETE as deletePublication } from '@/app/api/publications/route';
-import { POST as createEvent } from '@/app/api/events/route';
+import { POST as createEvent, DELETE as deleteEvent } from '@/app/api/events/route';
+import { POST as uploadFileApi } from '@/app/api/uploads/route';
+import path from 'path';
+import fs from 'fs';
 
 describe('User API', () => {
   let userCookie: string;
@@ -404,7 +407,7 @@ describe('User API', () => {
   });
 
   describe('POST /api/events', () => {
-    it('should not allow regular user to create event', async () => {
+    it('should allow authenticated user to create event and set organizer', async () => {
       const eventData = {
         title: 'Test Event',
         description: 'Test Description',
@@ -422,7 +425,62 @@ describe('User API', () => {
       });
 
       const res = await createEvent(req);
-      expect(res.status).toBe(403);
+      expect(res.status).toBe(201);
+      const body = await res.json();
+      expect(body.success).toBe(true);
+      expect(body.data?.organizer?.toString?.() || body.data?.organizer).toBeDefined();
+    });
+
+    it('should allow event organizer to delete their own event', async () => {
+      const eventData = {
+        title: 'Own Event',
+        description: 'Owned by user',
+        type: 'SEMINAR',
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 3600000),
+        location: 'Test Location',
+        status: 'UPCOMING'
+      };
+
+      const createReq = new NextRequest('http://localhost:3000/api/events', {
+        method: 'POST',
+        body: JSON.stringify(eventData),
+        headers: { 'Content-Type': 'application/json', 'Authorization': userCookie }
+      });
+      const createRes = await createEvent(createReq);
+      const createBody = await createRes.json();
+      const eventId = createBody.data._id;
+
+      const deleteReq = new NextRequest(`http://localhost:3000/api/events?id=${eventId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': userCookie }
+      });
+      const deleteRes = await deleteEvent(deleteReq);
+      const deleteBody = await deleteRes.json();
+
+      expect(deleteRes.status).toBe(200);
+      expect(deleteBody.success).toBe(true);
+    });
+  });
+
+  describe('Uploads (images/posters)', () => {
+    it('should upload an image and return a web path', async () => {
+      const file = new File([Buffer.from('test image')], 'test.png', { type: 'image/png' });
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', 'image');
+
+      const req = new NextRequest('http://localhost:3000/api/uploads', {
+        method: 'POST',
+        body: formData,
+        headers: { 'Authorization': userCookie }
+      });
+
+      const res = await uploadFileApi(req);
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.success).toBe(true);
+      expect(body.path).toMatch(/^\/uploads\/(image|poster|avatar)\//);
     });
   });
 });

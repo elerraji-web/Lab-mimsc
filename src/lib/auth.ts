@@ -19,6 +19,35 @@ export interface AuthUser {
 export async function getCurrentUser(request: NextRequest): Promise<AuthUser | null> {
   try {
     console.log('DEBUG: getCurrentUser called');
+    // Prefer admin token if present over any other session
+    const adminToken = request.cookies.get('admin_token')?.value;
+    console.log('DEBUG: admin_token from cookies:', adminToken ? 'present' : 'null');
+    if (adminToken) {
+      try {
+        const decoded = verify(adminToken, JWT_SECRET) as any;
+        console.log('DEBUG: admin token decoded role:', decoded.role);
+        if (decoded.role === 'admin') {
+          await connectDB();
+          const adminUser = await User.findById(decoded.userId).select('-password');
+          console.log('DEBUG: admin user found:', adminUser ? 'yes' : 'no');
+          if (adminUser) {
+            return {
+              _id: adminUser._id.toString(),
+              firstName: adminUser.firstName,
+              lastName: adminUser.lastName,
+              email: adminUser.email,
+              position: adminUser.position,
+              userType: adminUser.userType,
+              role: adminUser.role
+            };
+          }
+        }
+      } catch (adminError) {
+        console.log('DEBUG: admin token error:', adminError);
+        // Ignore admin token errors
+      }
+    }
+
     const sessionToken = await getToken({ req: request, secret: JWT_SECRET });
     if (sessionToken?.sub) {
       console.log('DEBUG: next-auth token found');
@@ -57,36 +86,7 @@ export async function getCurrentUser(request: NextRequest): Promise<AuthUser | n
     }
 
     if (!token) {
-      console.log('DEBUG: no user token, checking admin token');
-      // Check admin token if user token failed
-      const adminToken = request.cookies.get('admin_token')?.value;
-      console.log('DEBUG: admin_token from cookies:', adminToken ? 'present' : 'null');
-      if (adminToken) {
-        try {
-          const decoded = verify(adminToken, JWT_SECRET) as any;
-          console.log('DEBUG: admin token decoded role:', decoded.role);
-          if (decoded.role === 'admin') {
-            await connectDB();
-            const adminUser = await User.findById(decoded.userId).select('-password');
-            console.log('DEBUG: admin user found:', adminUser ? 'yes' : 'no');
-            if (adminUser) {
-              return {
-                _id: adminUser._id.toString(),
-                firstName: adminUser.firstName,
-                lastName: adminUser.lastName,
-                email: adminUser.email,
-                position: adminUser.position,
-                userType: adminUser.userType,
-                role: adminUser.role
-              };
-            }
-          }
-        } catch (adminError) {
-          console.log('DEBUG: admin token error:', adminError);
-          // Ignore admin token errors
-        }
-      }
-      console.log('DEBUG: returning null');
+      console.log('DEBUG: no user token and no admin token, returning null');
       return null;
     }
 

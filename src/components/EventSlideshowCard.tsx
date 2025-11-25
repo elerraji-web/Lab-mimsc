@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, MapPin } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Calendar, MapPin, ExternalLink } from 'lucide-react';
+import { normalizeAssetPath } from '@/lib/assetPaths';
 
 interface Event {
   _id: string;
@@ -14,6 +16,7 @@ interface Event {
   endDate: string;
   location: string;
   status: 'UPCOMING' | 'ONGOING' | 'COMPLETED' | 'CANCELLED';
+  poster?: string;
 }
 
 export default function EventSlideshowCard() {
@@ -22,6 +25,7 @@ export default function EventSlideshowCard() {
   const [error, setError] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [fade, setFade] = useState(true);
+  const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -117,8 +121,14 @@ export default function EventSlideshowCard() {
     });
   };
 
+  const posterUrl = normalizeAssetPath(currentEvent.poster);
+
   return (
-    <Card className={`w-[300px] h-[150px] overflow-hidden hidden md:block shadow-md border border-gray-200 transition-all duration-500 ease-in-out ${fade ? 'opacity-100' : 'opacity-0'}`}>
+    <Card
+      className={`w-[420px] ${hovered ? 'h-[340px] scale-[1.04]' : 'h-[150px] scale-[1.0]'} overflow-hidden hidden md:block shadow-md border border-gray-200 transition-all duration-300 ease-in-out ${fade ? 'opacity-100' : 'opacity-0'}`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between mb-1">
           <Badge variant="outline" className="text-xs">
@@ -151,6 +161,19 @@ export default function EventSlideshowCard() {
             <span>{currentEvent.location}</span>
           </div>
         </div>
+        {hovered && posterUrl && (
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="w-full rounded-none mt-2"
+          >
+            <a href={posterUrl} target="_blank" rel="noreferrer">
+              <ExternalLink className="w-3 h-3 mr-1" />
+              Voir le PDF
+            </a>
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

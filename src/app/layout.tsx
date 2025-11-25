@@ -16,15 +16,15 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "MIMSC Lab",
-  description: "Modern Next.js scaffold optimized . Built with TypeScript, Tailwind CSS, and shadcn/ui.",
-  keywords: ["Next.js", "TypeScript", "Tailwind CSS", "shadcn/ui", "AI development", "React"],
+  description: "Modern Next.js scaffold optimized for the lab site. Built with TypeScript, Tailwind CSS, and shadcn/ui.",
+  keywords: ["Next.js", "TypeScript", "Tailwind CSS", "shadcn/ui", "React"],
   authors: [{ name: "E. ERRAJI Team" }],
   icons: {
     icon: "./logo.svg",
   },
   openGraph: {
     title: "MIMSC",
-    description: "AI-powered development with modern React stack",
+    description: "Built with a modern React stack",
     url: "",
     siteName: "mimsc.top",
     type: "website",
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Code Scaffold",
-    description: "AI-powered development with modern React stack",
+    description: "Built with a modern React stack",
   },
 };
 

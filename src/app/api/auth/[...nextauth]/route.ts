@@ -38,8 +38,10 @@ const configuredHandler = googleProvider ? NextAuth({
         await connectDB();
         const email = user.email.toLowerCase();
         let existingUser = await User.findOne({ email });
+        const adminEmail = (process.env.ADMIN_EMAIL || 'admin@mimsc.ma').toLowerCase();
 
         if (!existingUser) {
+          console.log('Google sign-in: creating new user for', email);
           const givenName = (profile as any)?.given_name || user.name?.split(' ')?.[0] || 'Google';
           const familyName = (profile as any)?.family_name || user.name?.split(' ')?.slice(1)?.join(' ') || 'User';
 
@@ -52,25 +54,42 @@ const configuredHandler = googleProvider ? NextAuth({
             userType: 'RESEARCHER',
             avatar: user.image || '',
             isActive: true,
-            approvalStatus: 'PENDING'
+            approvalStatus: 'PENDING',
+            role: email === adminEmail ? 'ADMIN' : 'USER'
           });
           await existingUser.save();
+          console.log('Google sign-in: user created with id', existingUser._id.toString());
         } else {
           // Keep profile data up to date on sign-in
           const updates: any = {};
           if (user.image && existingUser.avatar !== user.image) {
             updates.avatar = user.image;
           }
+          // For pre-created users, auto-approve on first Google sign-in and activate the account
+          if (existingUser.approvalStatus !== 'APPROVED') {
+            updates.approvalStatus = 'APPROVED';
+          }
+          if (existingUser.isActive === false) {
+            updates.isActive = true;
+          }
+          if (email === adminEmail && existingUser.role !== 'ADMIN') {
+            updates.role = 'ADMIN';
+          }
           if (Object.keys(updates).length > 0) {
             await User.findByIdAndUpdate(existingUser._id, updates);
           }
         }
 
+        const roleFromDb = (existingUser.role || '').toString().toUpperCase();
+        const isConfiguredAdmin = email === adminEmail;
+        const finalRole = roleFromDb === 'ADMIN' || isConfiguredAdmin ? 'ADMIN' : (roleFromDb || 'USER');
+
         (user as any).id = existingUser._id.toString();
-        (user as any).role = existingUser.role;
+        (user as any).role = finalRole;
         (user as any).userType = existingUser.userType;
         (user as any).position = existingUser.position;
         (user as any).approvalStatus = existingUser.approvalStatus;
+        console.log('Google sign-in: success for', email, 'approvalStatus=', (user as any).approvalStatus);
         return true;
       } catch (error) {
         console.error('Google sign-in error:', error);
@@ -78,12 +97,18 @@ const configuredHandler = googleProvider ? NextAuth({
       }
     },
     async jwt({ token, user }) {
+      const adminEmail = (process.env.ADMIN_EMAIL || 'admin@mimsc.ma').toLowerCase();
       if (user) {
         token.sub = (user as any).id || token.sub;
-        (token as any).role = (user as any).role || 'USER';
+        (token as any).role = ((user as any).role || 'USER').toString().toUpperCase();
         (token as any).userType = (user as any).userType || 'RESEARCHER';
         (token as any).position = (user as any).position || '';
         (token as any).approvalStatus = (user as any).approvalStatus || 'PENDING';
+        token.email = user.email || token.email;
+      }
+      // ensure admin role is preserved for configured admin email
+      if ((token.email || '').toLowerCase() === adminEmail) {
+        (token as any).role = 'ADMIN';
       }
       return token;
     },
@@ -97,6 +122,13 @@ const configuredHandler = googleProvider ? NextAuth({
         approvalStatus: (token as any).approvalStatus
       } as any;
       return session;
+    },
+    async redirect({ baseUrl, token }) {
+      const role = (token as any)?.role;
+      if (role === 'ADMIN') {
+        return `${baseUrl}/portal`;
+      }
+      return `${baseUrl}/user`;
     }
   }
 }) : null;

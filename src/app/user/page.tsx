@@ -16,6 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { normalizeAssetPath } from '@/lib/assetPaths';
 import {
   Users,
   BookOpen,
@@ -32,6 +33,7 @@ interface User {
   firstName: string;
   lastName: string;
   email: string;
+  role?: string;
   title?: string;
   position: string;
   department?: string;
@@ -204,6 +206,7 @@ export default function UserDashboard() {
     website: ''
   });
   const [posterFile, setPosterFile] = useState<File | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
@@ -213,7 +216,7 @@ export default function UserDashboard() {
     checkAuth();
   }, []);
 
-  const uploadFile = async (file: File, type: 'avatar' | 'poster') => {
+  const uploadFile = async (file: File, type: 'avatar' | 'poster' | 'image') => {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('type', type);
@@ -246,6 +249,10 @@ export default function UserDashboard() {
 
       const data = await response.json();
       setUser(data.user);
+      // If admin, ensure role is uppercase for UI checks
+      if (data.user?.role && typeof data.user.role === 'string') {
+        data.user.role = data.user.role.toUpperCase();
+      }
       const approvalStatus = data.user.approvalStatus;
       if (approvalStatus === 'PENDING') {
         setUiStatus('pending');
@@ -344,6 +351,7 @@ export default function UserDashboard() {
     });
     setEditingEvent(null);
     setPosterFile(null);
+    setImageFile(null);
   };
 
   const handleAddPublication = async (e: FormEvent) => {
@@ -407,15 +415,45 @@ export default function UserDashboard() {
     }
   };
 
+  const handleDeletePublication = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this publication?')) return;
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`/api/publications?id=${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (res.ok) {
+        toast({ title: 'Success', description: 'Publication deleted successfully' });
+        if (user) loadUserData(user._id);
+      } else {
+        const err = await res.json().catch(() => null);
+        toast({
+          title: 'Error',
+          description: err?.error || 'Failed to delete publication',
+          variant: 'destructive',
+        });
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleAddEvent = async (e: FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
       let posterPath = eventForm.poster;
+      let imagePath = eventForm.image;
       if (posterFile) {
         posterPath = await uploadFile(posterFile, 'poster');
       }
+      if (imageFile) {
+        imagePath = await uploadFile(imageFile, 'image');
+      }
+      posterPath = normalizeAssetPath(posterPath);
+      imagePath = normalizeAssetPath(imagePath);
 
       const method = editingEvent ? 'PUT' : 'POST';
       const body = editingEvent
@@ -428,7 +466,8 @@ export default function UserDashboard() {
             maxAttendees: eventForm.maxAttendees
               ? parseInt(eventForm.maxAttendees, 10)
               : undefined,
-            poster: posterPath
+            poster: posterPath,
+            image: imagePath
           }
         : {
             ...eventForm,
@@ -438,7 +477,8 @@ export default function UserDashboard() {
             maxAttendees: eventForm.maxAttendees
               ? parseInt(eventForm.maxAttendees, 10)
               : undefined,
-            poster: posterPath
+            poster: posterPath,
+            image: imagePath
           };
 
       const response = await fetch('/api/events', {
@@ -474,6 +514,30 @@ export default function UserDashboard() {
           : `Failed to ${editingEvent ? 'update' : 'add'} event`,
         variant: 'destructive'
       });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteEvent = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this event?')) return;
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`/api/events?id=${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (res.ok) {
+        toast({ title: 'Success', description: 'Event deleted successfully' });
+        if (user) loadUserData(user._id);
+      } else {
+        const err = await res.json().catch(() => null);
+        toast({
+          title: 'Error',
+          description: err?.error || 'Failed to delete event',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -591,10 +655,11 @@ export default function UserDashboard() {
         : '',
       externalUrl: event.externalUrl || '',
       tags: event.tags ? event.tags.join(', ') : '',
-      poster: event.poster || '',
-      image: event.image || ''
+      poster: normalizeAssetPath(event.poster || ''),
+      image: normalizeAssetPath(event.image || '')
     });
     setPosterFile(null);
+    setImageFile(null);
     setIsAddEventOpen(true);
   };
 
@@ -720,6 +785,16 @@ export default function UserDashboard() {
             </div>
 
             <div className="flex items-center space-x-4">
+              {user.role === 'ADMIN' && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => router.push('/admin/dashboard')}
+                  className="rounded-none"
+                >
+                  Admin View
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -871,18 +946,26 @@ export default function UserDashboard() {
                           </TableCell>
                           <TableCell>
                             <div className="flex space-x-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  handleEditPublication(publication)
-                                }
-                                className="rounded-none"
-                              >
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              handleEditPublication(publication)
+                            }
+                            className="rounded-none"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeletePublication(publication._id)}
+                            className="rounded-none text-red-600 hover:text-red-700"
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -1290,6 +1373,14 @@ export default function UserDashboard() {
                             >
                               <Edit className="w-4 h-4" />
                             </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteEvent(event._id)}
+                              className="rounded-none text-red-600 hover:text-red-700"
+                            >
+                              Delete
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -1562,7 +1653,7 @@ export default function UserDashboard() {
                       <p className="text-sm text-muted-foreground">
                         Current file:{' '}
                         <a
-                          href={eventForm.poster}
+                          href={normalizeAssetPath(eventForm.poster)}
                           target="_blank"
                           rel="noreferrer"
                           className="underline"
@@ -1573,7 +1664,34 @@ export default function UserDashboard() {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="image">Image URL</Label>
+                    <Label htmlFor="image-upload">Event image (upload)</Label>
+                    <Input
+                      id="image-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                    />
+                    {imageFile && (
+                      <p className="text-sm text-muted-foreground">
+                        Selected file: {imageFile.name}
+                      </p>
+                    )}
+                    {!imageFile && eventForm.image && (
+                      <p className="text-sm text-muted-foreground">
+                        Current image:{' '}
+                        <a
+                          href={normalizeAssetPath(eventForm.image)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="underline"
+                        >
+                          View image
+                        </a>
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="image">Image URL (optional)</Label>
                     <Input
                       id="image"
                       value={eventForm.image}

@@ -5,11 +5,13 @@ import User from '@/lib/models/User';
 
 jest.setTimeout(120000);
 
-let mongoServer: MongoMemoryServer;
+let mongoServer: MongoMemoryServer | null = null;
 
 beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create();
-  const uri = mongoServer.getUri();
+  // Prefer explicit env URI; otherwise build an isolated test DB name to avoid collisions
+  const baseUri = process.env.MONGODB_URI || 'mongodb://admin:adminpassword@localhost:27017';
+  const testDbName = process.env.TEST_DB_NAME || `mimsc-lab-test-${Date.now()}`;
+  const uri = `${baseUri}/${testDbName}${baseUri.includes('?') ? '' : '?authSource=admin'}`;
   process.env.MONGODB_URI = uri;
   await mongoose.connect(uri);
 

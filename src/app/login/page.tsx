@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { signIn } from 'next-auth/react';
@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { LogIn, UserPlus, Shield, Chrome, Loader2 } from 'lucide-react';
 
 export default function AuthPage() {
+  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [loginForm, setLoginForm] = useState({
@@ -30,6 +31,9 @@ export default function AuthPage() {
   });
   const router = useRouter();
   const { toast } = useToast();
+  useEffect(() => {
+    setActiveTab('login');
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +59,8 @@ export default function AuthPage() {
           title: 'Success',
           description: 'Logged in successfully',
         });
-        router.push('/user');
+        const role = (data.user?.role || '').toString().toUpperCase();
+        router.push(role === 'ADMIN' ? '/portal' : '/user');
       } else {
         toast({
           title: 'Error',
@@ -120,7 +125,7 @@ export default function AuthPage() {
   const handleGoogleSignIn = async () => {
     try {
       setIsGoogleLoading(true);
-      await signIn('google', { callbackUrl: '/user' });
+      await signIn('google', { callbackUrl: '/portal' });
     } finally {
       setIsGoogleLoading(false);
     }
@@ -139,7 +144,7 @@ export default function AuthPage() {
         </div>
 
         {/* Auth Tabs */}
-        <Tabs defaultValue="login" className="w-full">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'login' | 'register')} className="w-full">
           <TabsList className="grid w-full grid-cols-2 rounded-none border-2 h-12">
             <TabsTrigger value="login" className="rounded-none font-medium">
               <LogIn className="w-4 h-4 mr-2" />
@@ -198,22 +203,17 @@ export default function AuthPage() {
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Connecting to Google...
                       </>
-                    ) : (
-                      <>
-                        <Chrome className="mr-2 h-4 w-4" />
-                        Continue with Google
-                      </>
-                    )}
-                  </Button>
-                </form>
-                <div className="mt-4 text-center">
-                  <Link href="/admin/login" className="text-sm text-primary hover:underline">
-                    Admin Login
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                ) : (
+                  <>
+                    <Chrome className="mr-2 h-4 w-4" />
+                    Continue with Google
+                  </>
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </TabsContent>
 
           <TabsContent value="register" className="mt-6">
             <Card className="rounded-none border-2">
@@ -330,7 +330,7 @@ export default function AuthPage() {
         {/* Footer */}
         <div className="text-center mt-8">
           <Link href="/" className="text-sm text-muted-foreground hover:text-primary">
-            <- Back to Home
+            &larr; Back to Home
           </Link>
         </div>
       </div>

@@ -61,11 +61,12 @@ export async function POST(request: NextRequest) {
       console.log('User saved successfully:', user._id);
 
       // Generate JWT
+      const normalizedRole = (user.role || 'USER').toString().toUpperCase();
       const token = sign(
         {
           userId: user._id,
           email: user.email,
-          role: 'user',
+          role: normalizedRole,
           iat: Math.floor(Date.now() / 1000),
           exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 7 days
         },
@@ -80,7 +81,8 @@ export async function POST(request: NextRequest) {
           lastName: user.lastName,
           email: user.email,
           position: user.position,
-          userType: user.userType
+          userType: user.userType,
+          role: normalizedRole
         }
       });
 
@@ -160,11 +162,12 @@ export async function POST(request: NextRequest) {
       }
 
       // Generate JWT
+      const normalizedRole = (user.role || 'USER').toString().toUpperCase();
       const token = sign(
         {
           userId: user._id,
           email: user.email,
-          role: 'user',
+          role: normalizedRole,
           iat: Math.floor(Date.now() / 1000),
           exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 7 days
         },
@@ -179,7 +182,8 @@ export async function POST(request: NextRequest) {
           lastName: user.lastName,
           email: user.email,
           position: user.position,
-          userType: user.userType
+          userType: user.userType,
+          role: normalizedRole
         }
       });
 
@@ -190,6 +194,27 @@ export async function POST(request: NextRequest) {
         maxAge: 7 * 24 * 60 * 60, // 7 days
         path: '/'
       });
+
+      // If user is admin, also issue admin_token for admin routes
+      if (normalizedRole === 'ADMIN') {
+        const adminToken = sign(
+          {
+            email: user.email,
+            role: 'admin',
+            userId: user._id.toString(),
+            iat: Math.floor(Date.now() / 1000),
+            exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours
+          },
+          JWT_SECRET
+        );
+        response.cookies.set('admin_token', adminToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 24 * 60 * 60,
+          path: '/'
+        });
+      }
 
       return response;
 

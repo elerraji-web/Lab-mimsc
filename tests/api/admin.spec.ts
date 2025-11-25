@@ -1,7 +1,8 @@
 import { describe, it, expect } from '@jest/globals';
 import { NextRequest, NextResponse } from 'next/server';
-import { loginAsAdmin } from '../global-setup';
+import { loginAsAdmin, loginAsUser } from '../global-setup';
 import { POST as adminAuth } from '@/app/api/admin/auth/route';
+import { POST as userAuth } from '@/app/api/auth/route';
 import { POST as adminLogout } from '@/app/api/admin/logout/route';
 import { GET as adminVerify } from '@/app/api/admin/verify/route';
 import { GET as getEvents, POST as createEvent, PUT as updateEvent, DELETE as deleteEvent } from '@/app/api/events/route';
@@ -12,9 +13,11 @@ import { POST as createStudent } from '@/app/api/students/route';
 
 describe('Admin APIs', () => {
   let adminCookie: string;
+  let userCookie: string;
 
   beforeAll(async () => {
     adminCookie = await loginAsAdmin();
+    userCookie = await loginAsUser();
   });
 
   describe('POST /api/admin/auth', () => {
@@ -201,6 +204,37 @@ describe('Admin APIs', () => {
       expect(data.success).toBe(true);
     });
 
+    it('should allow admin to delete user-created event', async () => {
+      // user creates event
+      const eventData = {
+        title: 'User Event For Admin Delete',
+        description: 'Created by user',
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 3600000).toISOString(),
+        type: 'MEETING',
+        status: 'UPCOMING',
+        location: 'User Location'
+      };
+      const createReq = new NextRequest('http://localhost:3000/api/events', {
+        method: 'POST',
+        body: JSON.stringify(eventData),
+        headers: { 'Content-Type': 'application/json', 'Authorization': userCookie }
+      });
+      const createRes = await createEvent(createReq);
+      const created = await createRes.json();
+      const userEventId = created.data._id;
+
+      // admin deletes it
+      const deleteReq = new NextRequest(`http://localhost:3000/api/events?id=${userEventId}`, {
+        method: 'DELETE',
+        headers: { cookie: adminCookie }
+      });
+      const deleteRes = await deleteEvent(deleteReq);
+      expect(deleteRes.status).toBe(200);
+      const delBody = await deleteRes.json();
+      expect(delBody.success).toBe(true);
+    });
+
     it('should require authentication for creating event', async () => {
       const eventData = {
         title: 'Unauthorized Event',
@@ -341,6 +375,19 @@ describe('Admin APIs', () => {
       expect(data.data.firstName).toBe(updateData.firstName);
     });
 
+    it('should allow admin to promote user to admin', async () => {
+      const req = new NextRequest('http://localhost:3000/api/users', {
+        method: 'PUT',
+        body: JSON.stringify({ id: userId, role: 'ADMIN' }),
+        headers: { 'Content-Type': 'application/json', cookie: adminCookie }
+      });
+      const res = await updateUser(req);
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.success).toBe(true);
+      expect(data.data.role).toBe('ADMIN');
+    });
+
     it('should allow admin to delete user', async () => {
       const req = new NextRequest(`http://localhost:3000/api/users?id=${userId}`, {
         method: 'DELETE',
@@ -350,6 +397,70 @@ describe('Admin APIs', () => {
       expect(res.status).toBe(200);
       const data = await res.json();
       expect(data.success).toBe(true);
+    });
+  });
+
+  describe('Admin verification with user token', () => {
+    it('should allow ADMIN role logged via /api/auth to access admin verify', async () => {
+      const bcrypt = require('bcryptjs');
+      const hashedPassword = await bcrypt.hash('PortalPass123', 10);
+      // create user with hashed password so /api/auth login succeeds
+      const createReq = new NextRequest('http://localhost:3000/api/users', {
+        method: 'POST',
+        body: JSON.stringify({
+          firstName: 'Portal',
+          lastName: 'Admin',
+          email: 'portal-admin@example.com',
+          password: hashedPassword,
+          userType: 'STAFF',
+          position: 'Manager',
+          approvalStatus: 'APPROVED',
+          role: 'ADMIN'
+        }),
+        headers: { 'Content-Type': 'application/json', cookie: adminCookie }
+      });
+      const createRes = await createUser(createReq);
+      expect(createRes.status).toBe(201);
+      const created = await createRes.json();
+      const portalUserId = created.data._id;
+
+      // ensure role/approval are set
+      const updateReq = new NextRequest('http://localhost:3000/api/users', {
+        method: 'PUT',
+        body: JSON.stringify({
+          id: portalUserId,
+          role: 'ADMIN',
+          approvalStatus: 'APPROVED'
+        }),
+        headers: { 'Content-Type': 'application/json', cookie: adminCookie }
+      });
+      const updateRes = await updateUser(updateReq);
+      expect(updateRes.status).toBe(200);
+
+      // login via user auth route
+      const loginReq = new NextRequest('http://localhost:3000/api/auth', {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'login',
+          email: 'portal-admin@example.com',
+          password: 'PortalPass123'
+        }),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const loginRes = await userAuth(loginReq as any);
+      expect(loginRes.status).toBe(200);
+      const setCookie = loginRes.headers.get('set-cookie') || '';
+      expect(setCookie).toContain('user_token');
+
+      // call admin verify with the user_token cookie
+      const verifyReq = new NextRequest('http://localhost:3000/api/admin/verify', {
+        headers: { cookie: setCookie }
+      });
+      const verifyRes = await adminVerify(verifyReq as any);
+      expect(verifyRes.status).toBe(200);
+      const verifyBody = await verifyRes.json();
+      expect(verifyBody.success).toBe(true);
+      expect(verifyBody.user.role).toBe('admin');
     });
   });
 

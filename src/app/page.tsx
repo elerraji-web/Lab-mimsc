@@ -346,7 +346,7 @@ export default function Home() {
       {/* Events Section */}
       <section id="events" className="py-24 bg-muted/30">
         <div className="container mx-auto px-6">
-          <DynamicEvents limit={6} showHeader={true} upcomingOnly={true} />
+          <DynamicEvents limit={6} showHeader={true} upcomingOnly={true} mode="hover" />
         </div>
       </section>
 

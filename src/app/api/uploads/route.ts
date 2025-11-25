@@ -7,12 +7,14 @@ export const runtime = 'nodejs';
 
 const allowedTypes = {
   avatar: ['image/jpeg', 'image/png', 'image/jpg'],
-  poster: ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf']
+  poster: ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'],
+  image: ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf']
 };
 
 const sizeLimits = {
   avatar: 5 * 1024 * 1024, // 5MB
-  poster: 15 * 1024 * 1024 // 15MB
+  poster: 15 * 1024 * 1024, // 15MB
+  image: 15 * 1024 * 1024
 };
 
 export async function POST(request: NextRequest) {
@@ -48,7 +50,7 @@ export async function POST(request: NextRequest) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const safeFolder = ['avatar', 'poster'].includes(uploadType) ? uploadType : 'files';
+    const safeFolder = ['avatar', 'poster', 'image'].includes(uploadType) ? uploadType : 'files';
     const uploadDir = path.join(process.cwd(), 'public', 'uploads', safeFolder);
     await fs.mkdir(uploadDir, { recursive: true });
 
@@ -59,9 +61,12 @@ export async function POST(request: NextRequest) {
 
     await fs.writeFile(filePath, buffer);
 
+    // Always return a web-friendly path (forward slashes)
+    const publicPath = `/uploads/${safeFolder}/${fileName}`;
+
     return NextResponse.json({
       success: true,
-      path: `/uploads/${safeFolder}/${fileName}`
+      path: publicPath
     });
   } catch (error) {
     if (error instanceof Error && (error.message === 'Authentication required' || error.message === 'Forbidden')) {

@@ -22,7 +22,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical } from 'lucide-react';
+import { GripVertical, Crown } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -40,6 +40,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import DOIFetcher from '@/components/DOIFetcher';
+import { normalizeAssetPath } from '@/lib/assetPaths';
 import {
   Users,
   BookOpen,
@@ -73,6 +74,7 @@ interface User {
   phone?: string;
   avatar?: string;
   userType: string;
+  role?: string;
   bio?: string;
   isActive: boolean;
   approvalStatus: string;
@@ -89,6 +91,7 @@ interface UserFormData {
   phone: string;
   avatar: string;
   userType: string;
+  role: string;
   bio: string;
 }
 
@@ -185,11 +188,12 @@ interface SortableTableRowProps {
   onDelete: (userId: string) => void;
   onApprove: (userId: string) => void;
   onReject: (userId: string) => void;
+  onPromote: (userId: string) => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
 }
 
-function SortableTableRow({ user, onEdit, onDelete, onApprove, onReject, onMoveUp, onMoveDown }: SortableTableRowProps) {
+function SortableTableRow({ user, onEdit, onDelete, onApprove, onReject, onPromote, onMoveUp, onMoveDown }: SortableTableRowProps) {
   const {
     attributes,
     listeners,
@@ -220,7 +224,6 @@ function SortableTableRow({ user, onEdit, onDelete, onApprove, onReject, onMoveU
         </div>
       </TableCell>
       <TableCell>{user.email}</TableCell>
-      <TableCell>{user.position}</TableCell>
       <TableCell>
         <Badge variant="secondary" className="rounded-none">
           {user.userType}
@@ -294,6 +297,16 @@ function SortableTableRow({ user, onEdit, onDelete, onApprove, onReject, onMoveU
           >
             Delete
           </Button>
+          {user.role !== 'ADMIN' && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPromote(user._id)}
+              className="rounded-none text-blue-600 hover:text-blue-700"
+            >
+              Make Admin
+            </Button>
+          )}
         </div>
       </TableCell>
     </TableRow>
@@ -322,6 +335,7 @@ export default function AdminDashboard() {
     phone: '',
     avatar: '',
     userType: 'FACULTY',
+    role: 'USER',
     bio: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -378,6 +392,7 @@ export default function AdminDashboard() {
   const { toast } = useToast();
   const [showDOIFetcher, setShowDOIFetcher] = useState(false);
   const [posterFile, setPosterFile] = useState<File | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [userAvatarFile, setUserAvatarFile] = useState<File | null>(null);
 
   const sensors = useSensors(
@@ -521,7 +536,7 @@ export default function AdminDashboard() {
     loadEvents();
   }, []);
 
-  const uploadFile = async (file: File, type: 'avatar' | 'poster') => {
+  const uploadFile = async (file: File, type: 'avatar' | 'poster' | 'image') => {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('type', type);
@@ -685,6 +700,7 @@ export default function AdminDashboard() {
     });
     setEditingEvent(null);
     setPosterFile(null);
+    setImageFile(null);
     setEventValidationErrors([]);
   };
 
@@ -817,6 +833,7 @@ export default function AdminDashboard() {
       phone: user.phone || '',
       avatar: user.avatar || '',
       userType: user.userType,
+      role: user.role || 'USER',
       bio: user.bio || ''
     });
     setUserAvatarFile(null);
@@ -984,6 +1001,41 @@ export default function AdminDashboard() {
     }
   };
 
+  const handlePromoteAdmin = async (userId: string) => {
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ id: userId, role: 'ADMIN' }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Success',
+          description: 'User promoted to admin',
+        });
+        loadUsers();
+      } else {
+        const error = await response.json();
+        toast({
+          title: 'Error',
+          description: error.error || 'Failed to promote user',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to promote user',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleEditPublication = (publication: Publication) => {
     setEditingPublication(publication);
     setPublicationForm({
@@ -1054,9 +1106,15 @@ export default function AdminDashboard() {
 
     try {
       let posterPath = eventForm.poster;
+      let imagePath = eventForm.image;
       if (posterFile) {
         posterPath = await uploadFile(posterFile, 'poster');
       }
+      if (imageFile) {
+        imagePath = await uploadFile(imageFile, 'image');
+      }
+      posterPath = normalizeAssetPath(posterPath);
+      imagePath = normalizeAssetPath(imagePath);
 
       const method = editingEvent ? 'PUT' : 'POST';
       const body = editingEvent
@@ -1065,13 +1123,15 @@ export default function AdminDashboard() {
             ...eventForm,
             tags: eventForm.tags ? eventForm.tags.split(',').map(t => t.trim()) : [],
             maxAttendees: eventForm.maxAttendees ? parseInt(eventForm.maxAttendees) : undefined,
-            poster: posterPath
+            poster: posterPath,
+            image: imagePath
           }
         : {
             ...eventForm,
             tags: eventForm.tags ? eventForm.tags.split(',').map(t => t.trim()) : [],
             maxAttendees: eventForm.maxAttendees ? parseInt(eventForm.maxAttendees) : undefined,
-            poster: posterPath
+            poster: posterPath,
+            image: imagePath
           };
 
       const response = await fetch('/api/events', {
@@ -1132,11 +1192,12 @@ export default function AdminDashboard() {
       registrationDeadline: event.registrationDeadline ? event.registrationDeadline.slice(0, 16) : '',
       externalUrl: event.externalUrl || '',
       tags: event.tags ? event.tags.join(', ') : '',
-      poster: event.poster || '',
-      image: event.image || ''
+      poster: normalizeAssetPath(event.poster || ''),
+      image: normalizeAssetPath(event.image || '')
     });
     setEventValidationErrors([]);
     setPosterFile(null);
+    setImageFile(null);
     setIsAddEventOpen(true);
   };
 
@@ -1647,7 +1708,6 @@ export default function AdminDashboard() {
                       <TableRow>
                         <TableHead>Name</TableHead>
                         <TableHead>Email</TableHead>
-                        <TableHead>Position</TableHead>
                         <TableHead>Type</TableHead>
                         <TableHead>Approval Status</TableHead>
                         <TableHead>Actions</TableHead>
@@ -1668,6 +1728,7 @@ export default function AdminDashboard() {
                               onDelete={handleDeleteUser}
                               onApprove={handleApproveUser}
                               onReject={handleRejectUser}
+                              onPromote={handlePromoteAdmin}
                               onMoveUp={index > 0 ? () => handleMoveUp(index) : undefined}
                               onMoveDown={index < users.length - 1 ? () => handleMoveDown(index) : undefined}
                             />
@@ -2254,7 +2315,7 @@ export default function AdminDashboard() {
                             <p className="text-sm text-muted-foreground">
                               Current file:{' '}
                               <a
-                                href={eventForm.poster}
+                                href={normalizeAssetPath(eventForm.poster)}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="underline"
@@ -2265,7 +2326,34 @@ export default function AdminDashboard() {
                           )}
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="image">Image URL</Label>
+                          <Label htmlFor="image-upload">Event image (upload)</Label>
+                          <Input
+                            id="image-upload"
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                          />
+                          {imageFile && (
+                            <p className="text-sm text-muted-foreground">
+                              Selected file: {imageFile.name}
+                            </p>
+                          )}
+                          {!imageFile && eventForm.image && (
+                            <p className="text-sm text-muted-foreground">
+                              Current image:{' '}
+                              <a
+                                href={normalizeAssetPath(eventForm.image)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="underline"
+                              >
+                                View image
+                              </a>
+                            </p>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="image">Image URL (optional)</Label>
                           <Input
                             id="image"
                             value={eventForm.image}
@@ -2313,7 +2401,7 @@ export default function AdminDashboard() {
                         <TableCell>
                           {event.poster ? (
                             <a
-                              href={event.poster}
+                              href={normalizeAssetPath(event.poster)}
                               target="_blank"
                               rel="noreferrer"
                               className="text-primary underline"

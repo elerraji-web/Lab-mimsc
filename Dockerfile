@@ -43,8 +43,8 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
-# Create directory for SQLite database
-RUN mkdir -p /app/prisma && chown -R nextjs:nodejs /app/prisma
+# Ensure writable directories for runtime data and uploads
+RUN mkdir -p /app/prisma /app/public/uploads && chown -R nextjs:nodejs /app/prisma /app/public
 
 USER nextjs
 
